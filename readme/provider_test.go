@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/lobliveoaklabs/readme-api-go-client/readme"
+	"github.com/liveoaklabs/readme-api-go-client/readme"
 )
 
 // NewTest sets up the provider for testing.

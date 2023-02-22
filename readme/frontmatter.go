@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/lobliveoaklabs/readme-api-go-client/readme"
+	"github.com/liveoaklabs/readme-api-go-client/readme"
 )
 
 // readmeFrontMatter represents the front matter keys available to ReadMe changelogs, custom pages, and docs.

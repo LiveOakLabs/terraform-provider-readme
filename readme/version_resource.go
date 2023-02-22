@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/lobliveoaklabs/readme-api-go-client/readme"
+	"github.com/liveoaklabs/readme-api-go-client/readme"
 )
 
 // Ensure the implementation satisfies the expected interfaces.

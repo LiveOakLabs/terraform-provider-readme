@@ -489,8 +489,8 @@ github.com/ldez/tagliatelle v0.4.0 h1:sylp7d9kh6AdXN2DpVGHBRb5guTVAgOxqNGhbqc4b1
 github.com/ldez/tagliatelle v0.4.0/go.mod h1:mNtTfrHy2haaBAw+VT7IBV6VXBThS7TCreYWbBcJ87I=
 github.com/leonklingele/grouper v1.1.1 h1:suWXRU57D4/Enn6pXR0QVqqWWrnJ9Osrz+5rjt8ivzU=
 github.com/leonklingele/grouper v1.1.1/go.mod h1:uk3I3uDfi9B6PeUjsCKi6ndcf63Uy7snXgR4yDYQVDY=
-github.com/lobliveoaklabs/readme-api-go-client v0.1.0 h1:FF0Mnp00byhMjSDVWAAZeJaYDpaov5Rau2AyhH+PRbQ=
-github.com/lobliveoaklabs/readme-api-go-client v0.1.0/go.mod h1:QJwawfgza5v4mUmYqK1A+IhIjxXIf+4MYsJHYhxfim0=
+github.com/liveoaklabs/readme-api-go-client v0.1.1 h1:VRs/Bpcat9mvnHwT9H7pM8wmhxN7+CoyKhqnZhQYnrg=
+github.com/liveoaklabs/readme-api-go-client v0.1.1/go.mod h1:Nzbd7UVw0g+CfZar15s+rf0UUQ7iHXGB9hFnMscQ9yA=
 github.com/lufeee/execinquery v1.2.1 h1:hf0Ems4SHcUGBxpGN7Jz78z1ppVkP/837ZlETPCEtOM=
 github.com/lufeee/execinquery v1.2.1/go.mod h1:EC7DrEKView09ocscGHC+apXMIaorh4xqSxS/dy8SbM=
 github.com/magiconair/properties v1.8.7 h1:IeQXZAiQcpL9mgcAe1Nu6cX9LLw6ExEHKjN0VQdvPDY=
