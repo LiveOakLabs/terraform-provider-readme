@@ -1,0 +1,31 @@
+# See https://pre-commit.com for more information
+repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.4.0
+  hooks:
+    - id: trailing-whitespace
+    - id: check-yaml
+    - id: check-added-large-files
+    - id: no-commit-to-branch
+      args: [--branch, main]
+
+- repo: local
+  hooks:
+    - id: golint
+      name: go linting
+      description: Run go linting via Makefile
+      entry: make lint
+      language: system
+      files: '.*\.go$'
+    - id: gofmt
+      name: gofmt
+      description: Run gofmt
+      entry: gofmt -w .
+      language: system
+      files: '.*\.go$'
+    - id: docs
+      name: docs
+      description: Run make docs to generate docs
+      entry: make docs
+      language: system
+      files: '(.*\.go|examples\/.*)'

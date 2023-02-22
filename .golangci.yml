@@ -1,0 +1,39 @@
+# Configuration for golangci-lint
+# See https://golangci-lint.run/ for more information.
+run:
+  concurrency: 4
+  timeout: 5m
+  # Include test files or not
+  tests: true
+
+linters:
+  enable:
+    - asasalint
+    - asciicheck
+    - bidichk
+    - bodyclose
+    - decorder
+    - dogsled
+    - dupword
+    - errcheck
+    - errname
+    - errorlint
+    - goconst
+    - gofumpt
+    - gosec
+    - gosimple
+    - govet
+    - grouper
+    - ineffassign
+    - interfacebloat
+    - misspell
+    - nestif
+    - nilerr
+    - nilnil
+    - nlreturn
+    - nonamedreturns
+    - staticcheck
+    - typecheck
+    - unused
+    - varnamelen
+    - wrapcheck
