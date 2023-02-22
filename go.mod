@@ -1,6 +1,6 @@
 module terraform-provider-readme
 
-go 1.19
+go 1.20
 
 require github.com/lobliveoaklabs/readme-api-go-client v0.0.1
 
