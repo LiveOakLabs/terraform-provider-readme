@@ -2,7 +2,7 @@ module terraform-provider-readme
 
 go 1.20
 
-require github.com/lobliveoaklabs/readme-api-go-client v0.0.1
+require github.com/lobliveoaklabs/readme-api-go-client v0.1.0
 
 require (
 	github.com/adrg/frontmatter v0.2.0
@@ -39,7 +39,7 @@ require (
 	github.com/acomagu/bufpipe v1.0.3 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
-	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
+	github.com/alecthomas/units v0.0.0-20211218093645-b94a6e3cc137 // indirect
 	github.com/alexkohler/prealloc v1.0.0 // indirect
 	github.com/alingse/asasalint v0.0.11 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
@@ -61,7 +61,7 @@ require (
 	github.com/cloudflare/circl v1.3.2 // indirect
 	github.com/curioswitch/go-reassign v0.2.0 // indirect
 	github.com/daixiang0/gci v0.9.1 // indirect
-	github.com/dave/dst v0.27.0 // indirect
+	github.com/dave/dst v0.27.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/denis-tingaikin/go-header v0.4.3 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
