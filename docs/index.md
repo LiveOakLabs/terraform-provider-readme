@@ -25,7 +25,7 @@ provider "readme" {
 terraform {
   required_providers {
     readme = {
-      source = "lobliveoaklabs/readme"
+      source = "liveoaklabs/readme"
     }
   }
 }
