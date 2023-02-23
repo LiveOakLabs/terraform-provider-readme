@@ -18,7 +18,7 @@ var version string = "dev"
 
 func main() {
 	err := providerserver.Serve(context.Background(), readme.New(version), providerserver.ServeOpts{
-		Address: "github.com/liveoaklabs/readme",
+		Address: "registry.terraform.io/liveoaklabs/readme",
 		// This provider requires Terraform 1.0+
 		ProtocolVersion: 6,
 	})
