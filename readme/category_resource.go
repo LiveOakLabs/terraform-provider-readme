@@ -217,7 +217,7 @@ func (r *categoryResource) Create(
 	}
 
 	// Get the category.
-	plan, err = r.get(ctx, slug, plan, apiRequestOptions(plan.Version))
+	plan, _, err = r.get(ctx, slug, plan, apiRequestOptions(plan.Version))
 	if err != nil {
 		resp.Diagnostics.AddError("Unable to create category.",
 			"There was a problem retrieving the category after creation.\n"+err.Error())
@@ -253,13 +253,19 @@ func (r *categoryResource) Read(
 	version := versionClean(ctx, r.client, state.VersionID.ValueString())
 
 	// Get the category metadata.
-	state, err := r.get(
+	state, apiResponse, err := r.get(
 		ctx,
 		state.Slug.ValueString(),
 		state,
 		apiRequestOptions(types.StringValue(version)),
 	)
 	if err != nil {
+		if apiResponse.APIErrorResponse.Error == "CATEGORY_NOTFOUND" {
+			resp.State.RemoveResource(ctx)
+
+			return
+		}
+
 		resp.Diagnostics.AddError("Unable to read category.", err.Error())
 
 		return
@@ -307,7 +313,7 @@ func (r *categoryResource) Update(
 	}
 
 	// Get the category.
-	plan, err = r.get(ctx, response.Slug, plan, apiRequestOptions(plan.Version))
+	plan, _, err = r.get(ctx, response.Slug, plan, apiRequestOptions(plan.Version))
 	if err != nil {
 		resp.Diagnostics.AddError("Unable to update category.",
 			"There was a problem retrieving the category after update.\n"+err.Error())
@@ -364,13 +370,13 @@ func (r *categoryResource) get(
 	slug string,
 	plan categoryModel,
 	options readme.RequestOptions,
-) (categoryModel, error) {
+) (categoryModel, *readme.APIResponse, error) {
 	var state categoryModel
 
 	// Get the version from ReadMe.
 	response, apiResponse, err := r.client.Category.Get(slug, options)
 	if err != nil {
-		return state, errors.New(clientError(err, apiResponse))
+		return state, apiResponse, errors.New(clientError(err, apiResponse))
 	}
 
 	state = categoryModel{
@@ -387,5 +393,5 @@ func (r *categoryResource) get(
 		VersionID:    types.StringValue(response.Version),
 	}
 
-	return state, nil
+	return state, apiResponse, nil
 }

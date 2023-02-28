@@ -285,8 +285,14 @@ func (r *versionResource) Read(
 	}
 
 	// Get version metadata.
-	state, err := r.get(plan.VersionClean.ValueString(), plan)
+	state, apiResponse, err := r.get(plan.VersionClean.ValueString(), plan)
 	if err != nil {
+		if apiResponse.APIErrorResponse.Error == "VERSION_NOTFOUND" {
+			resp.State.RemoveResource(ctx)
+
+			return
+		}
+
 		resp.Diagnostics.AddError("Unable to read version metadata.", err.Error())
 
 		return
@@ -369,17 +375,17 @@ func (r *versionResource) ImportState(
 func (r *versionResource) get(
 	version string,
 	plan versionResourceModel,
-) (versionResourceModel, error) {
+) (versionResourceModel, *readme.APIResponse, error) {
 	var state versionResourceModel
 
 	// Get the version from ReadMe.
 	response, apiResponse, err := r.client.Version.Get(version)
 	if err != nil {
-		return versionResourceModel{}, errors.New(clientError(err, apiResponse))
+		return versionResourceModel{}, apiResponse, errors.New(clientError(err, apiResponse))
 	}
 
 	if response.ID == "" {
-		return versionResourceModel{}, fmt.Errorf(
+		return versionResourceModel{}, apiResponse, fmt.Errorf(
 			"response is empty when looking up version '%s'",
 			version,
 		)
@@ -410,7 +416,7 @@ func (r *versionResource) get(
 
 	state.Categories, _ = types.ListValue(types.StringType, categories)
 
-	return state, nil
+	return state, apiResponse, nil
 }
 
 // save is a helper function to create or update a version.
@@ -446,7 +452,7 @@ func (r *versionResource) save(
 		return versionResourceModel{}, errors.New(clientError(err, apiResponse))
 	}
 
-	plan, err = r.get(createdVersion.VersionClean, plan)
+	plan, _, err = r.get(createdVersion.VersionClean, plan)
 	if err != nil {
 		return plan, err
 	}

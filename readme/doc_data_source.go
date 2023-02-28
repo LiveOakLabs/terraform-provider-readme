@@ -55,7 +55,7 @@ func (d *docDataSource) Read(
 	tflog.Info(ctx, fmt.Sprintf("retrieving doc with request options=%+v", requestOpts))
 
 	// Get the doc.
-	state, err := getDoc(d.client, ctx, state.Slug.ValueString(), state, requestOpts)
+	state, _, err := getDoc(d.client, ctx, state.Slug.ValueString(), state, requestOpts)
 	if err != nil {
 		resp.Diagnostics.AddError("Unable to retrieve doc metadata.", err.Error())
 
