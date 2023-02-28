@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.1.3 - 2023-02-28
+
+### Changes
+
+### 🐛 Bug Fixes
+
+- fix: re-create deleted resources @joshbeard (#9)
+
 ## v0.1.2 - 2023-02-23
 
 ### Changes
