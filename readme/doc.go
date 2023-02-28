@@ -117,13 +117,13 @@ func getDoc(
 	slug string,
 	model docModel,
 	options readme.RequestOptions,
-) (docModel, error) {
+) (docModel, *readme.APIResponse, error) {
 	var state docModel
 
 	// Get the doc from ReadMe.
 	response, apiResponse, err := client.Doc.Get(slug, options)
 	if err != nil {
-		return state, fmt.Errorf(clientError(err, apiResponse))
+		return state, apiResponse, fmt.Errorf(clientError(err, apiResponse))
 	}
 
 	// Map the API object to the Terraform model.
@@ -152,7 +152,7 @@ func getDoc(
 			options,
 		)
 		if err != nil {
-			return state, errors.New(clientError(err, apiResponse))
+			return state, apiResponse, errors.New(clientError(err, apiResponse))
 		}
 		state.CategorySlug = types.StringValue(category.Slug)
 	}
@@ -171,13 +171,13 @@ func getDoc(
 			parent, apiResponse, err := client.Doc.Get("id:"+state.ParentDoc.ValueString(), options)
 			if err != nil {
 				// failing here
-				return state, errors.New(clientError(err, apiResponse))
+				return state, apiResponse, errors.New(clientError(err, apiResponse))
 			}
 			state.ParentDocSlug = types.StringValue(parent.Slug)
 		}
 	}
 
-	return state, nil
+	return state, apiResponse, nil
 }
 
 // docModelAlgoliaValue returns the populated `algolia` object value embedded within `docModel`.

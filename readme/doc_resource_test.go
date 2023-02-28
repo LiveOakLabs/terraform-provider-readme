@@ -39,6 +39,34 @@ func TestDocResource(t *testing.T) {
 				Check: docResourceCommonChecks(mockDoc, ""),
 			},
 
+			// Test that a new doc gets created if it's deleted outside of Terraform.
+			{
+				Config: providerConfig + fmt.Sprintf(`
+					resource "readme_doc" "test" {
+						title    = "%s"
+						body     = "%s"
+						category = "%s"
+						type     = "%s"
+					}`,
+					mockDoc.Title, mockDoc.Body, mockDoc.Category, mockDoc.Type,
+				),
+				PreConfig: func() {
+					gock.OffAll()
+					docCommonGocks()
+					// Pre-update read.
+					mockAPIError.Error = "DOC_NOTFOUND"
+					gock.New(testURL).Get("/docs/" + mockDoc.Slug).Times(1).Reply(404).JSON(mockAPIError)
+
+					// Mock the request to create the resource.
+					gock.New(testURL).Post("/docs").Times(1).Reply(201).JSON(mockDoc)
+					// Mock the request to get and refresh the resource.
+					gock.New(testURL).Get("/docs/" + mockDoc.Slug).Times(2).Reply(200).JSON(mockDoc)
+
+					gock.New(testURL).Delete("/docs/" + mockDoc.Slug).Times(1).Reply(204)
+				},
+				Check: docResourceCommonChecks(mockDoc, ""),
+			},
+
 			// Test update results in error when the pre-update read fails.
 			{
 				Config: providerConfig + fmt.Sprintf(`

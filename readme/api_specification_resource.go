@@ -273,6 +273,12 @@ func (r *apiSpecificationResource) Read(
 	if state.UUID.ValueString() != "" {
 		def, apiResponse, err := r.client.APIRegistry.Get(state.UUID.ValueString())
 		if err != nil {
+			if apiResponse.APIErrorResponse.Error == "SPEC_NOTFOUND" {
+				resp.State.RemoveResource(ctx)
+
+				return
+			}
+
 			resp.Diagnostics.AddError(
 				"Unable to read API specification.",
 				clientError(err, apiResponse),

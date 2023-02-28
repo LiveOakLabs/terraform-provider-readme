@@ -159,7 +159,7 @@ func (r *docResource) Create(
 	}
 
 	// Get the doc.
-	state, err = getDoc(r.client, ctx, response.Slug, plan, requestOpts)
+	state, _, err = getDoc(r.client, ctx, response.Slug, plan, requestOpts)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to create doc.",
@@ -202,8 +202,14 @@ func (r *docResource) Read(
 	tflog.Info(ctx, fmt.Sprintf("retrieving doc with request options=%+v", requestOpts))
 
 	// Get the doc.
-	state, err := getDoc(r.client, ctx, state.Slug.ValueString(), plan, requestOpts)
+	state, apiResponse, err := getDoc(r.client, ctx, state.Slug.ValueString(), plan, requestOpts)
 	if err != nil {
+		if apiResponse.APIErrorResponse.Error == "DOC_NOTFOUND" {
+			resp.State.RemoveResource(ctx)
+
+			return
+		}
+
 		resp.Diagnostics.AddError("Unable to read doc.", err.Error())
 
 		return
@@ -259,7 +265,7 @@ func (r *docResource) Update(
 	}
 
 	// Get the doc.
-	plan, err = getDoc(r.client, ctx, response.Slug, plan, requestOpts)
+	plan, _, err = getDoc(r.client, ctx, response.Slug, plan, requestOpts)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to update doc.",

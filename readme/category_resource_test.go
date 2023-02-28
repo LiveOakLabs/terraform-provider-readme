@@ -29,6 +29,54 @@ var mockCategoryCreate = readme.CategorySaved{
 	Version:   mockVersion,
 }
 
+var categoryCreateChecks = resource.ComposeAggregateTestCheckFunc(
+	resource.TestCheckResourceAttr(
+		"readme_category.test",
+		"created_at",
+		mockCategoryCreate.CreatedAt,
+	),
+	resource.TestCheckResourceAttr(
+		"readme_category.test",
+		"id",
+		mockCategoryCreate.ID,
+	),
+	resource.TestCheckResourceAttr(
+		"readme_category.test",
+		"order",
+		fmt.Sprintf("%v", mockCategoryCreate.Order),
+	),
+	resource.TestCheckResourceAttr(
+		"readme_category.test",
+		"project",
+		mockCategoryCreate.Project,
+	),
+	resource.TestCheckResourceAttr(
+		"readme_category.test",
+		"reference",
+		fmt.Sprintf("%v", mockCategoryCreate.Reference),
+	),
+	resource.TestCheckResourceAttr(
+		"readme_category.test",
+		"slug",
+		mockCategoryCreate.Slug,
+	),
+	resource.TestCheckResourceAttr(
+		"readme_category.test",
+		"title",
+		mockCategoryCreate.Title,
+	),
+	resource.TestCheckResourceAttr(
+		"readme_category.test",
+		"type",
+		mockCategoryCreate.Type,
+	),
+	resource.TestCheckResourceAttr(
+		"readme_category.test",
+		"version_id",
+		mockCategoryCreate.Version.ID,
+	),
+)
+
 // createCategoryTestStep is a helper function that returns a resource test step
 // that creates a category successfully.
 // A 'check' parameter accepts a `resource.TestCheckFunc`, which may also be nil
@@ -77,53 +125,7 @@ func TestCategoryResource(t *testing.T) {
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create the category.
-			createCategoryTestStep(resource.ComposeAggregateTestCheckFunc(
-				resource.TestCheckResourceAttr(
-					"readme_category.test",
-					"created_at",
-					mockCategoryCreate.CreatedAt,
-				),
-				resource.TestCheckResourceAttr(
-					"readme_category.test",
-					"id",
-					mockCategoryCreate.ID,
-				),
-				resource.TestCheckResourceAttr(
-					"readme_category.test",
-					"order",
-					fmt.Sprintf("%v", mockCategoryCreate.Order),
-				),
-				resource.TestCheckResourceAttr(
-					"readme_category.test",
-					"project",
-					mockCategoryCreate.Project,
-				),
-				resource.TestCheckResourceAttr(
-					"readme_category.test",
-					"reference",
-					fmt.Sprintf("%v", mockCategoryCreate.Reference),
-				),
-				resource.TestCheckResourceAttr(
-					"readme_category.test",
-					"slug",
-					mockCategoryCreate.Slug,
-				),
-				resource.TestCheckResourceAttr(
-					"readme_category.test",
-					"title",
-					mockCategoryCreate.Title,
-				),
-				resource.TestCheckResourceAttr(
-					"readme_category.test",
-					"type",
-					mockCategoryCreate.Type,
-				),
-				resource.TestCheckResourceAttr(
-					"readme_category.test",
-					"version_id",
-					mockCategoryCreate.Version.ID,
-				),
-			)),
+			createCategoryTestStep(categoryCreateChecks),
 			// Test updating the category.
 			{
 				Config: providerConfig + `resource "readme_category" "test" {
@@ -229,6 +231,63 @@ func TestCategoryResource_Validation_Error(t *testing.T) {
 	})
 }
 
+// TestCategoryResource_ReCreate tests that a category gets re-created if it is deleted outside of Terraform.
+func TestCategoryResource_ReCreate(t *testing.T) {
+	// Close all gocks after completion.
+	defer gock.OffAll()
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Initial creation.
+			createCategoryTestStep(categoryCreateChecks),
+			// Re-create when API returns 404 for resource (deleted outside of Terraform).
+			{
+				Config: providerConfig + `resource "readme_category" "test" {
+					title = "` + mockCategoryCreate.Title + `"
+					type  = "` + mockCategoryCreate.Type + `"
+				}`,
+				PreConfig: func() {
+					// Ensure any existing mocks are removed.
+					gock.OffAll()
+					// Read current category and return a 404.
+					mockAPIError.Error = "CATEGORY_NOTFOUND"
+					gock.New(testURL).
+						Get("/categories/" + mockCategory.Slug).
+						Times(1).
+						Reply(404).
+						JSON(mockAPIError)
+					// Mock the request to create the resource.
+					gock.New(testURL).
+						Post("/categories").
+						Times(1).
+						Reply(201).
+						JSON(mockCategoryCreate)
+					// Mock the request to get and refresh the resource.
+					gock.New(testURL).
+						Get("/categories/" + mockCategoryCreate.Slug).
+						Times(2).
+						Reply(200).
+						JSON(mockCategory)
+					// Mock the request to resolve the version slug from its ID.
+					gock.New(testURL).
+						Get("/version").
+						Persist().
+						Reply(200).
+						JSON(mockVersionList)
+					// Post-test delete
+					gock.New(testURL).
+						Delete("/categories/" + mockCategory.Slug).
+						Times(1).
+						Reply(204)
+				},
+				Check: categoryCreateChecks,
+			},
+		},
+	})
+}
+
 // TestCategoryResource_Create_Error tests that an error is returned when the
 // API responds in error upon creation.
 func TestCategoryResource_Create_Error(t *testing.T) {
@@ -296,8 +355,7 @@ func TestCategoryResource_Post_Create_Read_Error(t *testing.T) {
 }
 
 // TestCategoryResource_Read_Error tests that a read error is returned when the
-// API responds with a 404 when requesting an existing category (e.g. on an
-// update).
+// API responds with a 500 when requesting an existing category.
 func TestCategoryResource_Read_Error(t *testing.T) {
 	// Close all gocks after completion.
 	defer gock.OffAll()
@@ -308,7 +366,7 @@ func TestCategoryResource_Read_Error(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create the category.
 			createCategoryTestStep(nil),
-			// Test when response is 404.
+			// Test when response is 500.
 			{
 				Config: providerConfig + `resource "readme_category" "test" {
 					title = "` + mockCategoryCreate.Title + `_update"
@@ -317,11 +375,12 @@ func TestCategoryResource_Read_Error(t *testing.T) {
 				ExpectError: regexp.MustCompile("Unable to read category"),
 				PreConfig: func() {
 					gock.OffAll()
-					// Return a 404 on a read request on an existing category.
+					// Return a 500 on a read request on an existing category.
+					mockAPIError.Error = "SERVER_ERROR"
 					gock.New(testURL).
 						Get("/categories/" + mockCategoryCreate.Slug).
 						Times(1).
-						Reply(404).
+						Reply(500).
 						JSON(mockAPIError)
 					gock.New(testURL).
 						Delete("/categories/" + mockCategoryCreate.Slug).
