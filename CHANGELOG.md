@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.1.4 - 2023-03-02
+
+### Changes
+
+### 🚀 Features
+
+- feature: image upload @joshbeard (#10)
+
 ## v0.1.3 - 2023-02-28
 
 ### Changes
