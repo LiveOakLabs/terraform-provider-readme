@@ -192,6 +192,7 @@ func (p *readmeProvider) Resources(_ context.Context) []func() resource.Resource
 		NewAPISpecificationResource,
 		NewCategoryResource,
 		NewDocResource,
+		NewImageResource,
 		NewVersionResource,
 	}
 }
