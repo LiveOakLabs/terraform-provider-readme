@@ -85,7 +85,7 @@ func TestImageResource_Errors(t *testing.T) {
 				Config: providerConfig + `resource "readme_image" "test" {
 					source = "invalid/path/to/image.png"
 				}`,
-				ExpectError: regexp.MustCompile("Unable to read source image file"),
+				ExpectError: regexp.MustCompile("Unable to get checksum for image file"),
 			},
 		},
 	})

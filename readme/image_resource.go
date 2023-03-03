@@ -65,7 +65,7 @@ func (r *imageResource) Configure(_ context.Context, req resource.ConfigureReque
 func openFile(src string) ([]byte, error) {
 	// check if file exists
 	if _, err := os.Stat(src); err != nil {
-		return nil, fmt.Errorf("error on file stat: %w", err)
+		return nil, fmt.Errorf("error reading file: %w", err)
 	}
 
 	// open file
@@ -133,7 +133,7 @@ func (m imageShasumModifier) PlanModifyString(
 	// Open the source image file and calculate the sha512 sum.
 	sourceData, err := openFile(sourcePlanValue.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError("Unable to read source image file.", err.Error())
+		resp.Diagnostics.AddError("Unable to get checksum for image file.", err.Error())
 
 		return
 	}
@@ -142,25 +142,6 @@ func (m imageShasumModifier) PlanModifyString(
 	// If the source image has changed, set the shasum to unknown.
 	if shaSum != sumStateValue.ValueString() {
 		resp.PlanValue = types.StringUnknown()
-	}
-}
-
-// ValidateConfig validates the attributes of the resource.
-func (r imageResource) ValidateConfig(
-	ctx context.Context,
-	req resource.ValidateConfigRequest,
-	resp *resource.ValidateConfigResponse,
-) {
-	var data imageResourceModel
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-
-	// verify source image exists
-	_, err := os.Stat(data.Source.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("source"),
-			"Unable to read source image file.", err.Error(),
-		)
 	}
 }
 
