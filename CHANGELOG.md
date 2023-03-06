@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.5 - 2023-03-06
+
+### 🐛 Bug Fixes
+
+- fix: image path validation @joshbeard (#11)
+
 ## v0.1.4 - 2023-03-02
 
 ### Changes
