@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.1.6 - 2023-03-07
+
+### Changes
+
+### 🐛 Bug Fixes
+
+- fix: Don't send conflicting request params @joshbeard (#14)
+
 ## v0.1.5 - 2023-03-06
 
 ### 🐛 Bug Fixes
