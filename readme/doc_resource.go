@@ -110,17 +110,29 @@ func (r docResource) ValidateConfig(
 
 // docPlanToParams maps plan attributes to a `readme.DocParams` struct to create or update a doc.
 func docPlanToParams(ctx context.Context, plan docModel) readme.DocParams {
-	return readme.DocParams{
-		Body:          plan.Body.ValueString(),
-		Category:      plan.Category.ValueString(),
-		CategorySlug:  plan.CategorySlug.ValueString(),
-		Hidden:        boolPoint(plan.Hidden.ValueBool()),
-		Order:         intPoint(int(plan.Order.ValueInt64())),
-		ParentDoc:     plan.ParentDoc.ValueString(),
-		ParentDocSlug: plan.ParentDocSlug.ValueString(),
-		Title:         plan.Title.ValueString(),
-		Type:          plan.Type.ValueString(),
+	params := readme.DocParams{
+		Body:   plan.Body.ValueString(),
+		Hidden: boolPoint(plan.Hidden.ValueBool()),
+		Order:  intPoint(int(plan.Order.ValueInt64())),
+		Title:  plan.Title.ValueString(),
+		Type:   plan.Type.ValueString(),
 	}
+
+	// Only use one of Category or CategorySlug.
+	if plan.Category.ValueString() != "" {
+		params.Category = plan.Category.ValueString()
+	} else {
+		params.CategorySlug = plan.CategorySlug.ValueString()
+	}
+
+	// Only use one of ParentDoc or ParentDocSlug.
+	if plan.ParentDoc.ValueString() != "" {
+		params.ParentDoc = plan.ParentDoc.ValueString()
+	} else {
+		params.ParentDocSlug = plan.ParentDocSlug.ValueString()
+	}
+
+	return params
 }
 
 // Create creates the doc and sets the initial Terraform state.
