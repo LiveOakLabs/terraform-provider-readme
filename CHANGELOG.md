@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.7 - 2023-03-16
+
+### 🐛 Bug Fixes
+
+- fix: api spec data source - lookup by title @joshbeard (#17)
+
 ## v0.1.6 - 2023-03-07
 
 ### Changes
