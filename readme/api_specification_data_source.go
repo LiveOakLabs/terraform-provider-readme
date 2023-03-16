@@ -126,15 +126,57 @@ func (d *apiSpecificationDataSource) Read(
 		return
 	}
 
-	// Get API specification.
-	apiSpec, apiResponse, err := d.client.APISpecification.Get(state.ID.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to retrieve API specification metadata.",
-			clientError(err, apiResponse),
-		)
+	var apiSpec readme.APISpecification
+	var apiResponse *readme.APIResponse
+	var err error
 
-		return
+	if state.ID.ValueString() == "" && state.Title.ValueString() != "" {
+		// Get all API specifications.
+		apiSpecs, apiResponse, err := d.client.APISpecification.GetAll()
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Unable to retrieve API specifications.",
+				clientError(err, apiResponse),
+			)
+
+			return
+		}
+
+		if len(apiSpecs) == 0 {
+			resp.Diagnostics.AddError(
+				"No API specifications found.",
+				"No API specifications were found in the ReadMe project when searching by title.",
+			)
+
+			return
+		}
+
+		// Find API specification by title.
+		for _, spec := range apiSpecs {
+			if spec.Title == state.Title.ValueString() {
+				apiSpec = spec
+				break
+			}
+		}
+
+		if apiSpec.ID == "" {
+			resp.Diagnostics.AddError(
+				"Unable to find API specification with title: "+state.Title.ValueString(), "",
+			)
+
+			return
+		}
+	} else {
+		// Get API specification by ID.
+		apiSpec, apiResponse, err = d.client.APISpecification.Get(state.ID.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Unable to retrieve API specification metadata.",
+				clientError(err, apiResponse),
+			)
+
+			return
+		}
 	}
 
 	// Map response body to model.
