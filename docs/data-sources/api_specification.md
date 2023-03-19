@@ -4,14 +4,14 @@ page_title: "readme_api_specification Data Source - readme"
 subcategory: ""
 description: |-
   Retrieve metadata about an API specification on ReadMe.com
-  See https://docs.readme.com/main/reference/getapispecification for more information about this API endpoint.
+  An ID or title must be specified to retrieve an API specification. The filter attribute may be used to filter API specifications by category ID, category slug, category title, or whether or not the API specification has a category. See https://docs.readme.com/main/reference/getapispecification for more information about this API endpoint.
 ---
 
 # readme_api_specification (Data Source)
 
 Retrieve metadata about an API specification on ReadMe.com
 
-See <https://docs.readme.com/main/reference/getapispecification> for more information about this API endpoint.
+An ID or title must be specified to retrieve an API specification. The `filter` attribute may be used to filter API specifications by category ID, category slug, category title, or whether or not the API specification has a category. See <https://docs.readme.com/main/reference/getapispecification> for more information about this API endpoint.
 
 ## Example Usage
 
@@ -35,6 +35,7 @@ output "api_spec_data_lookup" {
 
 ### Optional
 
+- `filter` (Attributes) Filter API specifications by the specified criteria. (see [below for nested schema](#nestedatt--filter))
 - `id` (String) The unique identifier of the API specification.
 - `title` (String) The title of the API specification derived from the specification JSON.
 
@@ -45,6 +46,17 @@ output "api_spec_data_lookup" {
 - `source` (String) The creation source of the API specification.
 - `type` (String) The type of the API specification.
 - `version` (String) The version of the API specification.
+
+<a id="nestedatt--filter"></a>
+### Nested Schema for `filter`
+
+Optional:
+
+- `category_id` (String) Return only API specifications with the specified category ID.
+- `category_slug` (String) Return only API specifications with the specified category slug.
+- `category_title` (String) Return only API specifications with the specified category title.
+- `has_category` (Boolean) Return only API specifications with a category.
+
 
 <a id="nestedatt--category"></a>
 ### Nested Schema for `category`
