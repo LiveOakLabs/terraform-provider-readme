@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.1.8 - 2023-03-20
+
+### Changes
+
+### 🚀 Features
+
+- feat: API spec data source filtering @joshbeard (#18)
+
 ## v0.1.7 - 2023-03-16
 
 ### 🐛 Bug Fixes
