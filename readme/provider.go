@@ -175,6 +175,7 @@ func (p *readmeProvider) DataSources(_ context.Context) []func() datasource.Data
 	return []func() datasource.DataSource{
 		NewAPIRegistryDataSource,
 		NewAPISpecificationDataSource,
+		NewAPISpecificationsDataSource,
 		NewCategoriesDataSource,
 		NewCategoryDataSource,
 		NewCategoryDocsDataSource,
