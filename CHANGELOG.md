@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.9 - 2023-03-24
+
+### 🚀 Features
+
+- feat: Add api_specifications data source @joshbeard (#19)
+
 ## v0.1.8 - 2023-03-20
 
 ### Changes
