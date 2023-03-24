@@ -3,6 +3,7 @@ package readme
 import (
 	"context"
 	"fmt"
+	"sort"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -28,6 +29,7 @@ type apiSpecificationsDataSourceModel struct {
 	Filter *apiSpecificationsDataSourceFilter `tfsdk:"filter"`
 	ID     types.String                       `tfsdk:"id"`
 	Specs  []apiSpecificationsItemModel       `tfsdk:"specs"`
+	SortBy types.String                       `tfsdk:"sort_by"`
 }
 
 type apiSpecificationsItemModel struct {
@@ -175,6 +177,12 @@ func (d *apiSpecificationsDataSource) Schema(
 					},
 				},
 			},
+			"sort_by": schema.StringAttribute{
+				Description: "Sort the returned API specifications by the specified key." +
+					"Valid values are `title` or `last_synced`. If unset, API specifications are in the order they were " +
+					"returned by the API.",
+				Optional: true,
+			},
 		},
 	}
 }
@@ -209,6 +217,19 @@ func (d *apiSpecificationsDataSource) Read(
 		return
 	}
 
+	// Optionally sort API specifications.
+	if !state.SortBy.IsNull() {
+		apiSpecs, err = sortAPISpecifications(apiSpecs, state.SortBy.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Unable to retrieve API specifications.",
+				fmt.Sprintf("Unable to sort API specifications. %s", err.Error()),
+			)
+
+			return
+		}
+	}
+
 	// Find a matching API specification.
 	for _, spec := range apiSpecs {
 		if !specMatchesMultiFilters(ctx, state.Filter, spec) {
@@ -234,6 +255,7 @@ func (d *apiSpecificationsDataSource) Read(
 		Filter: state.Filter,
 		ID:     types.StringValue("readme_api_specifications"),
 		Specs:  state.Specs,
+		SortBy: state.SortBy,
 	}
 
 	// Set state.
@@ -242,6 +264,24 @@ func (d *apiSpecificationsDataSource) Read(
 	if resp.Diagnostics.HasError() {
 		return
 	}
+}
+
+// sortAPISpecifications sorts the API specifications by the specified key.
+func sortAPISpecifications(specs []readme.APISpecification, sortBy string) ([]readme.APISpecification, error) {
+	switch sortBy {
+	case "title":
+		sort.Slice(specs, func(i, j int) bool {
+			return specs[i].Title < specs[j].Title
+		})
+	case "last_synced":
+		sort.Slice(specs, func(i, j int) bool {
+			return specs[i].LastSynced < specs[j].LastSynced
+		})
+	default:
+		return nil, fmt.Errorf("invalid sort value: %s", sortBy)
+	}
+
+	return specs, nil
 }
 
 // specMatchesMultiFilters returns true if the API specification matches the filter criteria.

@@ -74,6 +74,7 @@ data "readme_api_specifications" "filter4" {
 ### Optional
 
 - `filter` (Attributes) Filter API specifications by the specified criteria. Ommitting this attribute will return all API specifications. All category filters are 'OR' filters except `has_category`, which works as an 'AND' filter with the other category filters. (see [below for nested schema](#nestedatt--filter))
+- `sort_by` (String) Sort the returned API specifications by the specified key.Valid values are `title` or `last_synced`. If unset, API specifications are in the order they were returned by the API.
 
 ### Read-Only
 
