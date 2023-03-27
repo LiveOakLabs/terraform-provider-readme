@@ -16,7 +16,7 @@ func TestAPISpecificationsDataSource(t *testing.T) {
 	testSpecs := []readme.APISpecification{
 		{
 			ID:         "6398a4a594b26e00885e7ec0",
-			LastSynced: "2022-12-13T16:39:39.512Z",
+			LastSynced: "2022-12-13T16:41:39.512Z",
 			Category: readme.CategorySummary{
 				ID:    "63f8dc63d70452003b73ff12",
 				Title: "Test API Spec",
@@ -29,7 +29,7 @@ func TestAPISpecificationsDataSource(t *testing.T) {
 		},
 		{
 			ID:         "6398a4a594b26e00885e7ec1",
-			LastSynced: "2022-12-13T16:39:39.512Z",
+			LastSynced: "2022-12-13T16:40:39.512Z",
 			Category: readme.CategorySummary{
 				ID:    "63f8dc63d70452003b73ff13",
 				Title: "Another Test API Spec",
@@ -62,6 +62,27 @@ func TestAPISpecificationsDataSource(t *testing.T) {
 			name:     "it should return a list of all API specs when no filters are provided",
 			config:   `data "readme_api_specifications" "test" {}`,
 			response: testSpecs,
+		},
+
+		// === Sorting.
+		{
+			name:     "it should return a list of unsorted API specs when sort_by is not provided",
+			config:   `data "readme_api_specifications" "test" {}`,
+			response: []readme.APISpecification{testSpecs[0], testSpecs[1], testSpecs[2]},
+		},
+		{
+			name: "it should return a list of API specs sorted by title in ascending order when sort_by=title is provided",
+			config: `data "readme_api_specifications" "test" {
+				sort_by = "title"
+			}`,
+			response: []readme.APISpecification{testSpecs[1], testSpecs[0], testSpecs[2]},
+		},
+		{
+			name: "it should return a list of API specs sorted by last_synced in ascending order when sort_by=last_synced is provided",
+			config: `data "readme_api_specifications" "test" {
+				sort_by = "last_synced"
+				}`,
+			response: []readme.APISpecification{testSpecs[2], testSpecs[1], testSpecs[0]},
 		},
 
 		// ==== Filter by spec title.
