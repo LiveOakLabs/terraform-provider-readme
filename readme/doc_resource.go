@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -112,7 +113,7 @@ func (r docResource) ValidateConfig(
 func docPlanToParams(ctx context.Context, plan docModel) readme.DocParams {
 	params := readme.DocParams{
 		Body:   plan.Body.ValueString(),
-		Hidden: boolPoint(plan.Hidden.ValueBool()),
+		Hidden: plan.Hidden.ValueBoolPointer(),
 		Order:  intPoint(int(plan.Order.ValueInt64())),
 		Title:  plan.Title.ValueString(),
 		Type:   plan.Type.ValueString(),
@@ -729,6 +730,8 @@ func (r *docResource) Schema(
 					"attribute may be used as an alternative. Verifying a `parent_doc` by ID does not work if the " +
 					"parent is hidden.",
 				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(true),
 			},
 		},
 	}
