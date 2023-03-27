@@ -435,10 +435,10 @@ func (r *versionResource) save(
 	createParams := readme.VersionParams{
 		Codename:     plan.Codename.ValueString(),
 		From:         plan.From.ValueString(),
-		IsBeta:       boolPoint(plan.IsBeta.ValueBool()),
-		IsDeprecated: boolPoint(plan.IsDeprecated.ValueBool()),
-		IsHidden:     boolPoint(plan.IsHidden.ValueBool()),
-		IsStable:     boolPoint(plan.IsStable.ValueBool()),
+		IsBeta:       plan.IsBeta.ValueBoolPointer(),
+		IsDeprecated: plan.IsDeprecated.ValueBoolPointer(),
+		IsHidden:     plan.IsHidden.ValueBoolPointer(),
+		IsStable:     plan.IsStable.ValueBoolPointer(),
 		Version:      plan.Version.ValueString(),
 	}
 
