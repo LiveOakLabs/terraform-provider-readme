@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.10 - 2023-03-27
+
+### 🚀 Features
+
+- feat: Sort api_specifications data source @joshbeard (#20)
+
 ## v0.1.9 - 2023-03-24
 
 ### 🚀 Features
