@@ -62,6 +62,8 @@ func (d *docDataSource) Read(
 		return
 	}
 
+	state.Body = state.BodyClean
+
 	// Set state.
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -204,8 +206,12 @@ func (d *docDataSource) Schema(
 				},
 			},
 			"body": schema.StringAttribute{
+				Description: "The body content of the doc, formatted in ReadMe or GitHub flavored Markdown.",
+				Computed:    true,
+			},
+			"body_clean": schema.StringAttribute{
 				Description: "The body content of the doc, formatted in ReadMe or GitHub flavored Markdown. " +
-					"Accepts long page content, for example, greater than 100k characters.",
+					"This is an alias for the `body` attribute.",
 				Computed: true,
 			},
 			"body_html": schema.StringAttribute{

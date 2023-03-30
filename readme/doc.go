@@ -17,6 +17,7 @@ type docModel struct {
 	Algolia         types.Object `tfsdk:"algolia"`
 	API             types.Object `tfsdk:"api"`
 	Body            types.String `tfsdk:"body"`
+	BodyClean       types.String `tfsdk:"body_clean"`
 	BodyHTML        types.String `tfsdk:"body_html"`
 	Category        types.String `tfsdk:"category"`
 	CategorySlug    types.String `tfsdk:"category_slug"`
@@ -68,7 +69,8 @@ func docModelValue(ctx context.Context, doc readme.Doc, model docModel) docModel
 	return docModel{
 		Algolia:         docModelAlgoliaValue(doc.Algolia),
 		API:             docModelAPIValue(doc.API),
-		Body:            types.StringValue(doc.Body),
+		Body:            model.Body,
+		BodyClean:       types.StringValue(doc.Body),
 		BodyHTML:        types.StringValue(doc.BodyHTML),
 		Category:        types.StringValue(doc.Category),
 		CategorySlug:    model.CategorySlug,
