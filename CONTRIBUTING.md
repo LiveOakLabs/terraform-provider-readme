@@ -2,6 +2,16 @@
 
 Merge requests should be opened to merge into the `main` branch.
 
+## Workflow
+
+1. Fork and branch from `main`.
+2. Make changes.
+3. Run `pre-commit install` or `pre-commit run -a` before committing.
+4. Run `make test` before committing.
+5. Commit, push, and open a pull request into `main`.
+6. Ensure GitLab workflow checks pass.
+7. Set a GitLab label if you know what fits best.
+
 ## GitHub Labels
 
 * Use `patch`, `minor`, or `major` to indicate the [semantic version](https://semver.org/) for a
