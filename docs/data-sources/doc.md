@@ -39,7 +39,8 @@ output "example_doc" {
 
 - `algolia` (Attributes) Metadata about the Algolia search integration. See <https://docs.readme.com/main/docs/search> for more information. (see [below for nested schema](#nestedatt--algolia))
 - `api` (Attributes) Metadata for an API doc. (see [below for nested schema](#nestedatt--api))
-- `body` (String) The body content of the doc, formatted in ReadMe or GitHub flavored Markdown. Accepts long page content, for example, greater than 100k characters.
+- `body` (String) The body content of the doc, formatted in ReadMe or GitHub flavored Markdown.
+- `body_clean` (String) The body content of the doc, formatted in ReadMe or GitHub flavored Markdown. This is an alias for the `body` attribute.
 - `body_html` (String) The body content in HTML.
 - `category` (String) The category ID of the doc. Note that changing the category will result in a replacement of the doc resource.
 - `category_slug` (String) **Required**. The category ID of the doc. Note that changing the category will result in a replacement of the doc resource. This attribute may optionally be set in the body front matter.

@@ -19,8 +19,6 @@ resource "readme_doc" "example" {
     # type can be specified as an attribute or in the body front matter.
     type = "basic"
 
-    # body can be read from a file using Terraform's `file()` function.
-    # For best results, wrap the string with the `chomp()` function to remove
-    # trailing newlines. ReadMe's API trims these implicitly.
-    body = chomp(file("mydoc.md"))
+    # body can be read from a file using Terraform's `file()` or `templatefile()` functions.
+    body = file("mydoc.md")
 }

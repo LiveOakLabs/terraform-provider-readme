@@ -27,7 +27,7 @@ func TestDocResource(t *testing.T) {
 						category = "%s"
 						type     = "%s"
 					}`,
-					mockDoc.Title, mockDoc.Body, mockDoc.Category, mockDoc.Type,
+					mockDoc.Title, mockDocBodyString, mockDoc.Category, mockDoc.Type,
 				),
 				PreConfig: func() {
 					docCommonGocks()
@@ -48,7 +48,7 @@ func TestDocResource(t *testing.T) {
 						category = "%s"
 						type     = "%s"
 					}`,
-					mockDoc.Title, mockDoc.Body, mockDoc.Category, mockDoc.Type,
+					mockDoc.Title, mockDocBodyString, mockDoc.Category, mockDoc.Type,
 				),
 				PreConfig: func() {
 					gock.OffAll()
@@ -76,7 +76,7 @@ func TestDocResource(t *testing.T) {
 						category = "%s"
 						type     = "%s"
 					}`,
-					mockDoc.Body, mockDoc.Category, mockDoc.Type,
+					mockDocBodyString, mockDoc.Category, mockDoc.Type,
 				),
 				PreConfig: func() {
 					gock.OffAll()
@@ -94,7 +94,7 @@ func TestDocResource(t *testing.T) {
 						category = "%s"
 						type     = "%s"
 					}`,
-					mockDoc.Body, mockDoc.Category, mockDoc.Type,
+					mockDocBodyString, mockDoc.Category, mockDoc.Type,
 				),
 				PreConfig: func() {
 					gock.OffAll()
@@ -123,7 +123,7 @@ func TestDocResource(t *testing.T) {
 						category = "%s"
 						type     = "%s"
 					}`,
-					mockDoc.Body, mockDoc.Category, mockDoc.Type,
+					mockDocBodyString, mockDoc.Category, mockDoc.Type,
 				),
 				PreConfig: func() {
 					gock.OffAll()
@@ -151,7 +151,7 @@ func TestDocResource(t *testing.T) {
 						category = "%s"
 						type     = "%s"
 					}`,
-					mockDoc.Title, mockDoc.Body, mockDoc.Category, mockDoc.Type,
+					mockDoc.Title, mockDocBodyString, mockDoc.Category, mockDoc.Type,
 				),
 				PreConfig: func() {
 					gock.OffAll()
@@ -171,7 +171,7 @@ func TestDocResource(t *testing.T) {
 						category = "%s"
 						type     = "%s"
 					}`,
-					mockDoc.Body, mockDoc.Category, mockDoc.Type,
+					mockDocBodyString, mockDoc.Category, mockDoc.Type,
 				),
 				PreConfig: func() {
 					gock.OffAll()

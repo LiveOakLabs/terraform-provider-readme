@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -112,7 +113,7 @@ func (r docResource) ValidateConfig(
 // docPlanToParams maps plan attributes to a `readme.DocParams` struct to create or update a doc.
 func docPlanToParams(ctx context.Context, plan docModel) readme.DocParams {
 	params := readme.DocParams{
-		Body:   plan.Body.ValueString(),
+		Body:   strings.TrimSpace(plan.Body.ValueString()),
 		Hidden: plan.Hidden.ValueBoolPointer(),
 		Order:  intPoint(int(plan.Order.ValueInt64())),
 		Title:  plan.Title.ValueString(),
@@ -247,8 +248,7 @@ func (r *docResource) Update(
 	resp *resource.UpdateResponse,
 ) {
 	// Retrieve values from plan and current state.
-	var config, plan, state docModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &config)...)
+	var plan, state docModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -497,6 +497,11 @@ func (r *docResource) Schema(
 					"Accepts long page content, for example, greater than 100k characters.",
 				Computed: true,
 				Optional: true,
+			},
+			"body_clean": schema.StringAttribute{
+				Description: "The body content of the doc after transformations such as trimming leading and trailing" +
+					"spaces.",
+				Computed: true,
 			},
 			"body_html": schema.StringAttribute{
 				Description: "The body content in HTML.",

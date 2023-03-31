@@ -43,10 +43,8 @@ resource "readme_doc" "example" {
     # type can be specified as an attribute or in the body front matter.
     type = "basic"
 
-    # body can be read from a file using Terraform's `file()` function.
-    # For best results, wrap the string with the `chomp()` function to remove
-    # trailing newlines. ReadMe's API trims these implicitly.
-    body = chomp(file("mydoc.md"))
+    # body can be read from a file using Terraform's `file()` or `templatefile()` functions.
+    body = file("mydoc.md")
 }
 ```
 
@@ -76,6 +74,7 @@ Docs that specify a `parent_doc` or `parent_doc_slug` will use their parent's ca
 
 - `algolia` (Attributes) Metadata about the Algolia search integration. See <https://docs.readme.com/main/docs/search> for more information. (see [below for nested schema](#nestedatt--algolia))
 - `api` (Attributes) Metadata for an API doc. (see [below for nested schema](#nestedatt--api))
+- `body_clean` (String) The body content of the doc after transformations such as trimming leading and trailingspaces.
 - `body_html` (String) The body content in HTML.
 - `created_at` (String) Timestamp of when the version was created.
 - `deprecated` (Boolean) Toggles if a doc is deprecated or not.
