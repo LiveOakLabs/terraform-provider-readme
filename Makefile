@@ -53,8 +53,6 @@ check-vuln: ## Check for vulnerabilities using 'govulncheck'
 	@echo "Checking for vulnerabilities..."
 	go run golang.org/x/vuln/cmd/govulncheck -v ./...
 
-####################################################
-
 .PHONY: docs
 docs: ## Run 'go generate' to create documentation
 	go generate ./...

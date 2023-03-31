@@ -198,7 +198,7 @@ func (p *readmeProvider) Resources(_ context.Context) []func() resource.Resource
 	}
 }
 
-// versionModifier is a plan modifier that plans a change for an attribute if another specified attribute is changed.
+// otherAttributeModifier is a plan modifier that plans a change for an attribute if another specified attribute is changed.
 type otherAttributeModifier struct {
 	otherAttribute path.Path
 }
