@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.1.11 - 2023-03-31
+
+### 🐛 Bug Fixes
+
+- fix: Trim leading/trailing whitespace from docs @joshbeard (#23)
+
+### Other Changes
+
+- Docs/updates - examples, contributor workflow @joshbeard (#24)
+- build(deps): bump github.com/hashicorp/terraform-plugin-sdk/v2 from 2.25.0 to 2.26.1 @dependabot (#22)
+- build(deps): bump github.com/hashicorp/terraform-plugin-framework from 1.1.1 to 1.2.0 @dependabot (#21)
+
 ## v0.1.10 - 2023-03-27
 
 ### 🚀 Features
