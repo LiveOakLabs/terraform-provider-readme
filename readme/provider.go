@@ -179,6 +179,8 @@ func (p *readmeProvider) DataSources(_ context.Context) []func() datasource.Data
 		NewCategoriesDataSource,
 		NewCategoryDataSource,
 		NewCategoryDocsDataSource,
+		NewCustomPageDataSource,
+		NewCustomPagesDataSource,
 		NewDocDataSource,
 		NewDocSearchDataSource,
 		NewProjectDataSource,
@@ -192,6 +194,7 @@ func (p *readmeProvider) Resources(_ context.Context) []func() resource.Resource
 	return []func() resource.Resource{
 		NewAPISpecificationResource,
 		NewCategoryResource,
+		NewCustomPageResource,
 		NewDocResource,
 		NewImageResource,
 		NewVersionResource,

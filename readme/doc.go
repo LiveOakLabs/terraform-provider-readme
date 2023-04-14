@@ -52,6 +52,13 @@ type docModel struct {
 	VersionID       types.String `tfsdk:"version_id"`
 }
 
+// docMetadata represents the metadata field in the doc schema.
+type docMetadata struct {
+	Image       []string `tfsdk:"image"`
+	Title       string   `tfsdk:"title"`
+	Description string   `tfsdk:"description"`
+}
+
 // docModelValue returns a docModel value with the fields mapped from the `doc` parameter.
 //
 // This is used by both the data source and resource to create a plan and state value.
