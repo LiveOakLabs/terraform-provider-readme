@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.1.12 - 2023-04-18
+
+### 🚀 Features
+
+- feat: Custom Pages data sources and resource @joshbeard (#27)
+
+### Maintenance
+
+- build(deps): bump mvdan.cc/gofumpt from 0.4.0 to 0.5.0 @dependabot (#26)
+- build(deps): bump github.com/hashicorp/terraform-plugin-go from 0.14.3 to 0.15.0 @dependabot (#25)
+
 ## v0.1.11 - 2023-03-31
 
 ### 🐛 Bug Fixes
