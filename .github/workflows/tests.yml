@@ -50,7 +50,7 @@ jobs:
           cache: true
 
       - name: gosec
-        uses: securego/gosec@v2.15.0
+        uses: securego/gosec@v2.16.0
         env:
           GO111MODULE: on
         with:
