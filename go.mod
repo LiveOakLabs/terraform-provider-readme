@@ -12,7 +12,7 @@ require (
 	github.com/hashicorp/terraform-plugin-go v0.15.0
 	github.com/hashicorp/terraform-plugin-log v0.9.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.26.1
-	github.com/princjef/gomarkdoc v0.4.1
+	github.com/princjef/gomarkdoc v1.0.0
 	github.com/segmentio/golines v0.11.0
 	golang.org/x/vuln v0.1.0
 	gopkg.in/h2non/gock.v1 v1.1.2
@@ -144,6 +144,7 @@ require (
 	github.com/ldez/gomoddirectives v0.2.3 // indirect
 	github.com/ldez/tagliatelle v0.4.0 // indirect
 	github.com/leonklingele/grouper v1.1.1 // indirect
+	github.com/logrusorgru/aurora/v4 v4.0.0 // indirect
 	github.com/lufeee/execinquery v1.2.1 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/maratori/testableexamples v1.0.0 // indirect
@@ -178,6 +179,7 @@ require (
 	github.com/polyfloyd/go-errorlint v1.4.0 // indirect
 	github.com/posener/complete v1.2.3 // indirect
 	github.com/princjef/mageutil v1.0.0 // indirect
+	github.com/princjef/termdiff v0.1.0 // indirect
 	github.com/prometheus/client_golang v1.14.0 // indirect
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.42.0 // indirect
