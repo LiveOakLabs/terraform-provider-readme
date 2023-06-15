@@ -184,5 +184,3 @@ Read-Only:
 - `name` (String)
 - `slug` (String)
 - `type` (String)
-
-

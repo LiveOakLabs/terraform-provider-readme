@@ -45,5 +45,3 @@ output "category" {
 - `type` (String) The category type.
 - `version` (String) The 'semver-ish' value of the version the category is under.
 - `version_id` (String) The version the category is associated with.
-
-
