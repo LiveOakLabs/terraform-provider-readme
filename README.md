@@ -1,19 +1,19 @@
 # Terraform Provider for ReadMe.com
 
 [![Version](https://img.shields.io/github/v/release/liveoaklabs/terraform-provider-readme)](https://github.com/liveoaklabs/terraform-provider-readme/releases)
-[![CodeQL](https://github.com/liveoaklabs/terraform-provider-readme/workflows/CodeQL/badge.svg)](https://github.com/liveoaklabs/terraform-provider-readme/actions?query=workflow%3ACodeQL)
-[![Tests](https://github.com/liveoaklabs/terraform-provider-readme/actions/workflows/tests.yml/badge.svg)](https://github.com/liveoaklabs/terraform-provider-readme/actions/workflows/tests.yml)
 
 Terraform provider for [ReadMe.com](https://readme.com)
 
 It uses the [ReadMe API Go client](https://github.com/liveoaklabs/readme-api-go-client) and the
 [Terraform Plugin Framework](https://developer.hashicorp.com/terraform/plugin/framework).
 
+![Live Oak Bank](.github/readme/lob-logo.png)
+
 This provider is developed by [Live Oak Bank](https://liveoakbank.com) and is not affiliated with ReadMe.com.
 
-__Terraform 1.0+ is required.__
-
 ## Usage
+
+__Terraform 1.0+ is required.__
 
 Refer to the [provider docs on the Terraform registry](https://registry.terraform.io/providers/LiveOakLabs/readme/latest/docs) for information
 about using the provider.
