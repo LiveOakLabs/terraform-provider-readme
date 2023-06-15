@@ -484,6 +484,8 @@ github.com/leonklingele/grouper v1.1.1 h1:suWXRU57D4/Enn6pXR0QVqqWWrnJ9Osrz+5rjt
 github.com/leonklingele/grouper v1.1.1/go.mod h1:uk3I3uDfi9B6PeUjsCKi6ndcf63Uy7snXgR4yDYQVDY=
 github.com/liveoaklabs/readme-api-go-client v0.1.2 h1:noKqgF1vuk3UY+lzK/qm6rstU+h9dGzCfjC781ymsg4=
 github.com/liveoaklabs/readme-api-go-client v0.1.2/go.mod h1:HBCHBeSxhVaklfKn+tXw0NIz/AEOVLpv/PO8Hkt6toc=
+github.com/logrusorgru/aurora/v4 v4.0.0 h1:sRjfPpun/63iADiSvGGjgA1cAYegEWMPCJdUpJYn9JA=
+github.com/logrusorgru/aurora/v4 v4.0.0/go.mod h1:lP0iIa2nrnT/qoFXcOZSrZQpJ1o6n2CUf/hyHi2Q4ZQ=
 github.com/lufeee/execinquery v1.2.1 h1:hf0Ems4SHcUGBxpGN7Jz78z1ppVkP/837ZlETPCEtOM=
 github.com/lufeee/execinquery v1.2.1/go.mod h1:EC7DrEKView09ocscGHC+apXMIaorh4xqSxS/dy8SbM=
 github.com/magiconair/properties v1.8.7 h1:IeQXZAiQcpL9mgcAe1Nu6cX9LLw6ExEHKjN0VQdvPDY=
@@ -597,10 +599,12 @@ github.com/polyfloyd/go-errorlint v1.4.0/go.mod h1:qJCkPeBn+0EXkdKTrUCcuFStM2xrD
 github.com/posener/complete v1.1.1/go.mod h1:em0nMJCgc9GFtwrmVmEMR/ZL6WyhyjMBndrE9hABlRI=
 github.com/posener/complete v1.2.3 h1:NP0eAhjcjImqslEwo/1hq7gpajME0fTLTezBKDqfXqo=
 github.com/posener/complete v1.2.3/go.mod h1:WZIdtGGp+qx0sLrYKtIRAruyNpv6hFCicSgv7Sy7s/s=
-github.com/princjef/gomarkdoc v0.4.1 h1:Ubt5OiHYi2PdxrDkWMeWM4ROrbvAGkIXBz3PquxglBM=
-github.com/princjef/gomarkdoc v0.4.1/go.mod h1:+o04FW4GNL2vPr/35yxMV/8eXjhsdNBBPMVVDOOTLec=
+github.com/princjef/gomarkdoc v1.0.0 h1:RuqWaHl7meVwMT+7wlZL2qUFqKxEDDze34vNrNUhgWc=
+github.com/princjef/gomarkdoc v1.0.0/go.mod h1:HI3w0Zv8H03ecak/IqVAcPFTuPt7sn7Top6xbgCs1Qk=
 github.com/princjef/mageutil v1.0.0 h1:1OfZcJUMsooPqieOz2ooLjI+uHUo618pdaJsbCXcFjQ=
 github.com/princjef/mageutil v1.0.0/go.mod h1:mkShhaUomCYfAoVvTKRcbAs8YSVPdtezI5j6K+VXhrs=
+github.com/princjef/termdiff v0.1.0 h1:O3PWhfPFzX6GqzQ+41B3XzzJpMlx0+9Vysm+Pv76C9U=
+github.com/princjef/termdiff v0.1.0/go.mod h1:JJOfCA/eR6T1JfsoxQQ6jsG3LGoQDoKUIRQrKqAO+p4=
 github.com/prometheus/client_golang v0.9.1/go.mod h1:7SWBe2y4D6OKWSNQJUaRYU/AaXPKyh/dDVn+NZz0KFw=
 github.com/prometheus/client_golang v1.0.0/go.mod h1:db9x61etRT2tGnBNRi70OPL5FsnadC4Ky3P0J6CfImo=
 github.com/prometheus/client_golang v1.7.1/go.mod h1:PY5Wy2awLA44sXw4AOSfFBetzPP4j5+D6mVACh+pe2M=
