@@ -66,5 +66,3 @@ Read-Only:
 - `description` (String)
 - `image` (List of String)
 - `title` (String)
-
-

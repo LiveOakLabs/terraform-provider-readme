@@ -46,5 +46,3 @@ output "example_registry_uuid" {
 
 - `definition` (String) The raw JSON definition of an API specification.
 - `id` (String) The internal ID of this resource.
-
-

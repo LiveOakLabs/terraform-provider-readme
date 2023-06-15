@@ -49,5 +49,3 @@ Read-Only:
 - `title` (String) The title of the category.
 - `type` (String) The category type.
 - `version_id` (String) The version the category is associated with.
-
-

@@ -123,5 +123,3 @@ Read-Only:
 
 - `match_level` (String)
 - `value` (String)
-
-

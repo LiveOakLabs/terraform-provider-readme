@@ -44,5 +44,3 @@ output "image_info" {
 - `id` (String) The sha512sum of the source image.
 - `url` (String) The URL of the uploaded image.
 - `width` (Number) The pixel width of the image.
-
-

@@ -60,5 +60,3 @@ Read-Only:
 - `order` (Number) The order of the category.
 - `slug` (String) The slug of the category.
 - `title` (String) The title of the category.
-
-

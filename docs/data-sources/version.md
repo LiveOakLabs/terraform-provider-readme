@@ -51,5 +51,3 @@ output "example_version" {
 - `is_stable` (Boolean) Indicates if the version is stable.
 - `project` (String) The project the version is in.
 - `release_date` (String) Timestamp of when the version was released.
-
-

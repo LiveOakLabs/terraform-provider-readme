@@ -68,5 +68,3 @@ Read-Only:
 - `slug` (String)
 - `title` (String)
 - `type` (String)
-
-

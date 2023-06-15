@@ -51,5 +51,3 @@ output "example_project_base_url" {
 - `name` (String) The name of the project.
 - `plan` (String) The account subscription plan.
 - `subdomain` (String) The base URL for the project.
-
-

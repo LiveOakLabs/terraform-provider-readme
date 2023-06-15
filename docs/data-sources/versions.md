@@ -56,5 +56,3 @@ Read-Only:
 - `is_deprecated` (Boolean) Indicates if the version is deprecated.
 - `is_hidden` (Boolean) Indicates if the version is hidden.
 - `is_stable` (Boolean) Indicates if the version is stable.
-
-
