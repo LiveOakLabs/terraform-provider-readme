@@ -12,7 +12,7 @@ require (
 	github.com/hashicorp/terraform-plugin-go v0.16.0
 	github.com/hashicorp/terraform-plugin-log v0.9.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.26.1
-	github.com/princjef/gomarkdoc v1.0.0
+	github.com/princjef/gomarkdoc v1.1.0
 	github.com/segmentio/golines v0.11.0
 	golang.org/x/vuln v0.1.0
 	gopkg.in/h2non/gock.v1 v1.1.2
