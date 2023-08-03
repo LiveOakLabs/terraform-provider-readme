@@ -49,15 +49,15 @@ jobs:
           go-version-file: 'go.mod'
           cache: true
 
+      - name: check-vuln
+        run: make check-vuln
+
       - name: gosec
         uses: securego/gosec@v2.16.0
         env:
           GO111MODULE: on
         with:
           args: ./...
-
-      - name: check-vuln
-        run: make check-vuln
 
   lint:
     runs-on: ubuntu-latest
