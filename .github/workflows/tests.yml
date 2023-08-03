@@ -21,7 +21,6 @@ jobs:
       - uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
         with:
           go-version-file: 'go.mod'
-          cache: true
       - run: go mod download
       - run: go build -v .
 
@@ -32,7 +31,6 @@ jobs:
       - uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
         with:
           go-version-file: 'go.mod'
-          cache: true
       - run: go generate ./...
       - name: git diff
         run: |
@@ -47,7 +45,6 @@ jobs:
       - uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
         with:
           go-version-file: 'go.mod'
-          cache: true
 
       - name: check-vuln
         run: make check-vuln
@@ -66,7 +63,6 @@ jobs:
       - uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
         with:
           go-version-file: 'go.mod'
-          cache: true
 
       - name: Lint
         run: make lint
@@ -89,7 +85,6 @@ jobs:
       - uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
         with:
           go-version-file: 'go.mod'
-          cache: true
 
       - name: Test
         run: make coverage
