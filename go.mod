@@ -14,7 +14,7 @@ require (
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.27.0
 	github.com/princjef/gomarkdoc v1.1.0
 	github.com/segmentio/golines v0.11.0
-	golang.org/x/vuln v0.2.0
+	golang.org/x/vuln v1.0.0
 	gopkg.in/h2non/gock.v1 v1.1.2
 	mvdan.cc/gofumpt v0.5.0
 )
