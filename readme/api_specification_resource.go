@@ -33,16 +33,17 @@ type apiSpecificationResource struct {
 
 // apiSpecificationResourceModel maps the struct from the ReadMe client library to Terraform attributes.
 type apiSpecificationResourceModel struct {
-	ID         types.String `tfsdk:"id"`
-	Category   types.Object `tfsdk:"category"`
-	UUID       types.String `tfsdk:"uuid"`
-	Definition types.String `tfsdk:"definition"`
-	LastSynced types.String `tfsdk:"last_synced"`
-	Semver     types.String `tfsdk:"semver"`
-	Source     types.String `tfsdk:"source"`
-	Title      types.String `tfsdk:"title"`
-	Type       types.String `tfsdk:"type"`
-	Version    types.String `tfsdk:"version"`
+	ID             types.String `tfsdk:"id"`
+	Category       types.Object `tfsdk:"category"`
+	DeleteCategory types.Bool   `tfsdk:"delete_category"`
+	UUID           types.String `tfsdk:"uuid"`
+	Definition     types.String `tfsdk:"definition"`
+	LastSynced     types.String `tfsdk:"last_synced"`
+	Semver         types.String `tfsdk:"semver"`
+	Source         types.String `tfsdk:"source"`
+	Title          types.String `tfsdk:"title"`
+	Type           types.String `tfsdk:"type"`
+	Version        types.String `tfsdk:"version"`
 }
 
 // NewAPISpecificationResource is a helper function to simplify the provider implementation.
@@ -168,6 +169,10 @@ func (r *apiSpecificationResource) Schema(
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"delete_category": schema.BoolAttribute{
+				Description: "Delete the category associated with the API specification when the resource is deleted.",
+				Optional:    true,
+			},
 			"last_synced": schema.StringAttribute{
 				Description: "Timestamp of last synchronization.",
 				Computed:    true,
@@ -280,7 +285,7 @@ func (r *apiSpecificationResource) Read(
 			}
 
 			resp.Diagnostics.AddError(
-				"Unable to read API specification.",
+				fmt.Sprintf("Unable to read API specification: %+v", apiResponse.APIErrorResponse.Error),
 				clientError(err, apiResponse),
 			)
 
@@ -298,10 +303,19 @@ func (r *apiSpecificationResource) Read(
 		version,
 	)
 	if err != nil {
-		resp.Diagnostics.AddError("Unable to read API specification.", err.Error())
+		if strings.Contains(err.Error(), "API specification not found") {
+			resp.State.RemoveResource(ctx)
+
+			return
+		}
+		resp.Diagnostics.AddError(
+			fmt.Sprintf("Unable to read API specification: %+v", err),
+			err.Error())
 
 		return
 	}
+
+	state.DeleteCategory = plan.DeleteCategory
 
 	// Compare the local state with the remote definition.
 	// The JSON keys/values are compared between the local and remote definition without regards to whitespace.
@@ -371,6 +385,30 @@ func (r *apiSpecificationResource) Delete(
 
 		return
 	}
+
+	// Remove the category if delete_category is set to true.
+	// When deleting a specification, its category is not deleted by the API.
+	if state.DeleteCategory.ValueBool() {
+		category := state.Category.Attributes()
+		catSlug := category["slug"].String()
+		// Remove double quotes
+		catSlug = strings.ReplaceAll(catSlug, "\"", "")
+
+		// Categories are versioned. Get the version ID from the state.
+		versionID := state.Version.ValueString()
+		version := versionClean(ctx, r.client, versionID)
+
+		opts := readme.RequestOptions{Version: version}
+		_, apiResponse, err := r.client.Category.Delete(catSlug, opts)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Unable to delete category.",
+				clientError(err, apiResponse),
+			)
+
+			return
+		}
+	}
 }
 
 // ImportState imports an API Specification by ID.
@@ -431,11 +469,15 @@ func (r *apiSpecificationResource) save(
 		return apiSpecificationResourceModel{}, errors.New("response is empty after saving")
 	}
 
+	deleteCategory := plan.DeleteCategory
+
 	// Get the spec plan.
 	plan, err = r.makePlan(response.ID, plan.Definition, registry.RegistryUUID, version)
 	if err != nil {
 		return apiSpecificationResourceModel{}, err
 	}
+
+	plan.DeleteCategory = deleteCategory
 
 	return plan, nil
 }
