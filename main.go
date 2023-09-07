@@ -3,7 +3,8 @@ package main
 import (
 	"context"
 	"log"
-	"terraform-provider-readme/readme"
+
+	"github.com/liveoaklabs/terraform-provider-readme/readme"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 )

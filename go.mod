@@ -1,6 +1,6 @@
-module terraform-provider-readme
+module github.com/liveoaklabs/terraform-provider-readme
 
-go 1.20
+go 1.21
 
 require github.com/liveoaklabs/readme-api-go-client v0.1.2
 
