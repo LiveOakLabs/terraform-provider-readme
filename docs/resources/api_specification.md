@@ -35,6 +35,11 @@ See <https://docs.readme.com/main/reference/uploadapispecification> for more inf
 resource "readme_api_specification" "example" {
   # 'definition' accepts a string of an OpenAPI specification definition JSON.
   definition = file("petstore.json")
+
+  # When an API specification is created, a category is also created but is
+  # not deleted when the API specification is deleted. Set this parameter to
+  # true to delete the category when the API specification is deleted.
+  delete_category = true
 }
 
 # Output the ID of the created resource.
@@ -57,6 +62,7 @@ output "created_spec_json" {
 
 ### Optional
 
+- `delete_category` (Boolean) Delete the category associated with the API specification when the resource is deleted.
 - `semver` (String) The semver(-ish) of the API specification. This value may also be set in the definition JSON `info:version` key, but will be ignored if this attribute is set. Changing the version of a created resource will replace the API specification. Use unique resources to use the same specification across multiple versions.
 
 Learn more about document versioning at <https://docs.readme.com/main/docs/versions>.
