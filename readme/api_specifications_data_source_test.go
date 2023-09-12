@@ -8,48 +8,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/liveoaklabs/readme-api-go-client/readme"
-	"gopkg.in/h2non/gock.v1"
+	"github.com/liveoaklabs/terraform-provider-readme/internal/testdata"
 )
 
 func TestAPISpecificationsDataSource(t *testing.T) {
-	// Mock the default API response for all tests.
-	testSpecs := []readme.APISpecification{
-		{
-			ID:         "6398a4a594b26e00885e7ec0",
-			LastSynced: "2022-12-13T16:41:39.512Z",
-			Category: readme.CategorySummary{
-				ID:    "63f8dc63d70452003b73ff12",
-				Title: "Test API Spec",
-				Slug:  "test-api-spec",
-			},
-			Source:  "api",
-			Title:   "Test API Spec",
-			Type:    "oas",
-			Version: "638cf4cfdea3ff0096d1a95a",
-		},
-		{
-			ID:         "6398a4a594b26e00885e7ec1",
-			LastSynced: "2022-12-13T16:40:39.512Z",
-			Category: readme.CategorySummary{
-				ID:    "63f8dc63d70452003b73ff13",
-				Title: "Another Test API Spec",
-				Slug:  "another-test-api-spec",
-			},
-			Source:  "api",
-			Title:   "Another Test API Spec",
-			Type:    "oas",
-			Version: "638cf4cfdea3ff0096d1a95b",
-		},
-		{
-			ID:         "6398a4a594b26e00885e7ec2",
-			LastSynced: "2022-12-13T16:39:39.512Z",
-			Source:     "api",
-			Title:      "Test API Spec Without Category",
-			Type:       "oas",
-			Version:    "638cf4cfdea3ff0096d1a95c",
-		},
-	}
-
 	testCases := []struct {
 		name         string                    // The name of the test.
 		config       string                    // The Terraform config to use for the test.
@@ -61,48 +23,68 @@ func TestAPISpecificationsDataSource(t *testing.T) {
 		{
 			name:     "it should return a list of all API specs when no filters are provided",
 			config:   `data "readme_api_specifications" "test" {}`,
-			response: testSpecs,
+			response: testdata.APISpecifications,
 		},
 
 		// === Sorting.
 		{
 			name:     "it should return a list of unsorted API specs when sort_by is not provided",
 			config:   `data "readme_api_specifications" "test" {}`,
-			response: []readme.APISpecification{testSpecs[0], testSpecs[1], testSpecs[2]},
+			response: testdata.APISpecifications,
 		},
 		{
 			name: "it should return a list of API specs sorted by title in ascending order when sort_by=title is provided",
 			config: `data "readme_api_specifications" "test" {
 				sort_by = "title"
 			}`,
-			response: []readme.APISpecification{testSpecs[1], testSpecs[0], testSpecs[2]},
+			response: []readme.APISpecification{
+				testdata.APISpecifications[1],
+				testdata.APISpecifications[0],
+				testdata.APISpecifications[2],
+			},
 		},
 		{
 			name: "it should return a list of API specs sorted by last_synced in ascending order when sort_by=last_synced is provided",
 			config: `data "readme_api_specifications" "test" {
 				sort_by = "last_synced"
-				}`,
-			response: []readme.APISpecification{testSpecs[2], testSpecs[1], testSpecs[0]},
+			}`,
+			response: []readme.APISpecification{
+				testdata.APISpecifications[2],
+				testdata.APISpecifications[1],
+				testdata.APISpecifications[0],
+			},
 		},
 
 		// ==== Filter by spec title.
 		{
 			name: "it should return API specs that match the provided title filter",
-			config: `data "readme_api_specifications" "test" {
-				filter = { title = ["Test API Spec", "Another Test API Spec"] }
+			config: fmt.Sprintf(`data "readme_api_specifications" "test" {
+				filter = { title = ["%s", "%s"] }
 			}`,
-			response: []readme.APISpecification{testSpecs[0], testSpecs[1]},
-			excluded: []readme.APISpecification{testSpecs[2]},
+				testdata.APISpecifications[0].Title,
+				testdata.APISpecifications[1].Title,
+			),
+			response: []readme.APISpecification{
+				testdata.APISpecifications[0],
+				testdata.APISpecifications[1],
+			},
+			excluded: []readme.APISpecification{testdata.APISpecifications[2]},
 		},
 
 		// ==== Filter by spec version ID.
 		{
 			name: "it should return API specs that match the provided version filter",
-			config: `data "readme_api_specifications" "test" {
-				filter = { version = ["638cf4cfdea3ff0096d1a95a", "638cf4cfdea3ff0096d1a95b"] }
+			config: fmt.Sprintf(`data "readme_api_specifications" "test" {
+				filter = { version = ["%s", "%s"] }
 			}`,
-			response: []readme.APISpecification{testSpecs[0], testSpecs[1]},
-			excluded: []readme.APISpecification{testSpecs[2]},
+				testdata.APISpecifications[0].Version,
+				testdata.APISpecifications[1].Version,
+			),
+			response: []readme.APISpecification{
+				testdata.APISpecifications[0],
+				testdata.APISpecifications[1],
+			},
+			excluded: []readme.APISpecification{testdata.APISpecifications[2]},
 		},
 
 		// ==== Filter by has_category.
@@ -111,29 +93,34 @@ func TestAPISpecificationsDataSource(t *testing.T) {
 			config: `data "readme_api_specifications" "test" {
 				filter = { has_category = true }
 			}`,
-			response: []readme.APISpecification{testSpecs[0], testSpecs[1]},
-			excluded: []readme.APISpecification{testSpecs[2]},
+			response: []readme.APISpecification{
+				testdata.APISpecifications[0],
+				testdata.APISpecifications[1],
+			},
+			excluded: []readme.APISpecification{testdata.APISpecifications[2]},
 		},
 		{
 			name: "it should return only API specs that have a category when has_category is true and used with another filter",
-			config: `data "readme_api_specifications" "test" {
+			config: fmt.Sprintf(`data "readme_api_specifications" "test" {
 				filter = {
-					has_category = true
-					category_slug = [
-						"test-api-spec",
-						"another-test-api-spec",
-						"test-api-spec-without-category"
-					]
+					has_category  = true
+					category_slug = ["%s", "%s", "test-api-spec-without-category"]
 				}
 			}`,
-			response: []readme.APISpecification{testSpecs[0], testSpecs[1]},
-			excluded: []readme.APISpecification{testSpecs[2]},
+				testdata.APISpecifications[0].Category.Slug,
+				testdata.APISpecifications[1].Category.Slug,
+			),
+			response: []readme.APISpecification{
+				testdata.APISpecifications[0],
+				testdata.APISpecifications[1],
+			},
+			excluded: []readme.APISpecification{testdata.APISpecifications[2]},
 		},
 		{
 			name: "it should return an empty list when has_category is true and used with another filter that doesn't match any API specs",
 			config: `data "readme_api_specifications" "test" {
 				filter = {
-					has_category = true
+					has_category  = true
 					category_slug = ["test-api-spec-without-category"]
 				}
 			}`,
@@ -146,32 +133,43 @@ func TestAPISpecificationsDataSource(t *testing.T) {
 			config: `data "readme_api_specifications" "test" {
 				filter = { category_title = ["Test API Spec"] }
 			}`,
-			response: []readme.APISpecification{testSpecs[0]},
-			excluded: []readme.APISpecification{testSpecs[1], testSpecs[2]},
+			response: []readme.APISpecification{testdata.APISpecifications[0]},
+			excluded: []readme.APISpecification{
+				testdata.APISpecifications[1],
+				testdata.APISpecifications[2],
+			},
 		},
 
 		// ==== Filter by category ID.
 		{
 			name: "it should return API specs that match the provided category_id filter when has_category is not provided",
-			config: `data "readme_api_specifications" "test" {
-				filter = { category_id = ["63f8dc63d70452003b73ff13"] }
+			config: fmt.Sprintf(`data "readme_api_specifications" "test" {
+				filter = { category_id = ["%s"] }
 			}`,
-			response: []readme.APISpecification{testSpecs[1]},
-			excluded: []readme.APISpecification{testSpecs[0], testSpecs[2]},
+				testdata.APISpecifications[1].Category.ID,
+			),
+			response: []readme.APISpecification{testdata.APISpecifications[1]},
+			excluded: []readme.APISpecification{
+				testdata.APISpecifications[0],
+				testdata.APISpecifications[2],
+			},
 		},
 		{
 			name: "it should return API specs that match the provided category_id filter when has_category is true",
-			config: `data "readme_api_specifications" "test" {
+			config: fmt.Sprintf(`data "readme_api_specifications" "test" {
 				filter = {
 					has_category = true
-					category_id  = [
-						"63f8dc63d70452003b73ff12",
-						"63f8dc63d70452003b73ff13"
-					]
+					category_id  = ["%s", "%s"]
 				}
 			}`,
-			response: []readme.APISpecification{testSpecs[0]},
-			excluded: []readme.APISpecification{testSpecs[1], testSpecs[2]},
+				testdata.APISpecifications[0].Category.ID,
+				testdata.APISpecificationsNoCategory.Category.ID,
+			),
+			response: []readme.APISpecification{testdata.APISpecifications[0]},
+			excluded: []readme.APISpecification{
+				testdata.APISpecifications[1],
+				testdata.APISpecificationsNoCategory,
+			},
 		},
 
 		// ==== Filter by category slug.
@@ -180,22 +178,31 @@ func TestAPISpecificationsDataSource(t *testing.T) {
 			config: `data "readme_api_specifications" "test" {
 				filter = { category_slug = ["another-test-api-spec"] }
 			}`,
-			response: []readme.APISpecification{testSpecs[1]},
-			excluded: []readme.APISpecification{testSpecs[0], testSpecs[2]},
+			response: []readme.APISpecification{testdata.APISpecifications[1]},
+			excluded: []readme.APISpecification{
+				testdata.APISpecifications[0],
+				testdata.APISpecifications[2],
+			},
 		},
 
 		// ==== Filter combinations.
 		{
 			name: "it should return API specs that match the provided category_id and category_title filters",
-			config: `data "readme_api_specifications" "test" {
+			config: fmt.Sprintf(`data "readme_api_specifications" "test" {
 				filter = {
-					category_id    = ["6398a4a594b26e00885e7ec2"]
-					category_title = ["Another Test API Spec"]
+					category_id    = ["%s"]
+					category_title = ["%s"]
 					has_category   = true
 				}
 			}`,
-			response: []readme.APISpecification{testSpecs[1]},
-			excluded: []readme.APISpecification{testSpecs[0], testSpecs[2]},
+				testdata.APISpecifications[1].Category.ID,
+				testdata.APISpecificationsNoCategory.Category.Title,
+			),
+			response: []readme.APISpecification{testdata.APISpecifications[1]},
+			excluded: []readme.APISpecification{
+				testdata.APISpecifications[0],
+				testdata.APISpecifications[2],
+			},
 		},
 		{
 			name: "it does not return specs that don't match any filters provided",
@@ -239,7 +246,7 @@ func TestAPISpecificationsDataSource(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			response := testSpecs
+			response := testdata.APISpecifications
 			if tc.response != nil {
 				response = tc.response
 			}
@@ -257,17 +264,7 @@ func TestAPISpecificationsDataSource(t *testing.T) {
 						{
 							Config:      providerConfig + tc.config,
 							ExpectError: regexp.MustCompile(tc.expectError),
-							PreConfig: func() {
-								gock.OffAll()
-								gock.New(testURL).
-									Get("/api-specification").
-									MatchParam("perPage", "100").
-									MatchParam("page", "1").
-									Persist().
-									Reply(responseCode).
-									SetHeaders(map[string]string{"link": `<>; rel="next", <>; rel="prev", <>; rel="last"`}).
-									JSON(response)
-							},
+							PreConfig:   testdata.APISpecificationRespond(response, responseCode),
 						},
 					},
 				})
@@ -281,17 +278,7 @@ func TestAPISpecificationsDataSource(t *testing.T) {
 							Check: resource.ComposeAggregateTestCheckFunc(
 								apiSpecificationsChecks(t, response, tc.excluded)...,
 							),
-							PreConfig: func() {
-								gock.OffAll()
-								gock.New(testURL).
-									Get("/api-specification").
-									MatchParam("perPage", "100").
-									MatchParam("page", "1").
-									Persist().
-									Reply(200).
-									SetHeaders(map[string]string{"link": `<>; rel="next", <>; rel="prev", <>; rel="last"`}).
-									JSON(response)
-							},
+							PreConfig: testdata.APISpecificationRespond(response, responseCode),
 						},
 					},
 				})

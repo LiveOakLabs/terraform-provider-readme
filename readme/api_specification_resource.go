@@ -278,7 +278,7 @@ func (r *apiSpecificationResource) Read(
 	if state.UUID.ValueString() != "" {
 		def, apiResponse, err := r.client.APIRegistry.Get(state.UUID.ValueString())
 		if err != nil {
-			if apiResponse.APIErrorResponse.Error == "SPEC_NOTFOUND" {
+			if apiResponse != nil && apiResponse.APIErrorResponse.Error == "SPEC_NOTFOUND" {
 				resp.State.RemoveResource(ctx)
 
 				return
@@ -462,11 +462,14 @@ func (r *apiSpecificationResource) save(
 	}
 
 	if err != nil {
-		return apiSpecificationResourceModel{}, errors.New(clientError(err, apiResponse))
+		return apiSpecificationResourceModel{}, fmt.Errorf("unable to save: %+v", apiResponse)
 	}
 
 	if response.ID == "" {
-		return apiSpecificationResourceModel{}, errors.New("response is empty after saving")
+		return apiSpecificationResourceModel{}, fmt.Errorf(
+			"specification response is empty after saving: %+v",
+			response,
+		)
 	}
 
 	deleteCategory := plan.DeleteCategory
@@ -474,7 +477,7 @@ func (r *apiSpecificationResource) save(
 	// Get the spec plan.
 	plan, err = r.makePlan(response.ID, plan.Definition, registry.RegistryUUID, version)
 	if err != nil {
-		return apiSpecificationResourceModel{}, err
+		return apiSpecificationResourceModel{}, fmt.Errorf("unable to make plan: %+v", err)
 	}
 
 	plan.DeleteCategory = deleteCategory
@@ -496,7 +499,7 @@ func (r *apiSpecificationResource) makePlan(
 	if strings.HasPrefix(version, "id:") {
 		versionInfo, _, err := r.client.Version.Get(version)
 		if err != nil {
-			return apiSpecificationResourceModel{}, fmt.Errorf("%w", err)
+			return apiSpecificationResourceModel{}, fmt.Errorf("error resolving version: %w", err)
 		}
 
 		version = versionInfo.VersionClean
@@ -505,7 +508,7 @@ func (r *apiSpecificationResource) makePlan(
 	// Retrieve metadata about the API specification.
 	spec, err := r.get(specID, version)
 	if err != nil {
-		return apiSpecificationResourceModel{}, err
+		return apiSpecificationResourceModel{}, fmt.Errorf("error getting specification: %w", err)
 	}
 	// Map the plan to the resource struct.
 	plan := apiSpecificationResourceModel{
@@ -529,11 +532,12 @@ func (r *apiSpecificationResource) get(specID, version string) (readme.APISpecif
 	requestOptions := readme.RequestOptions{Version: version}
 	specification, apiResponse, err := r.client.APISpecification.Get(specID, requestOptions)
 	if err != nil {
-		return specification, errors.New(clientError(err, apiResponse))
+		// return specification, errors.New(clientError(err, apiResponse))
+		return specification, fmt.Errorf("unable to get specification id %s: %s", specID, string(apiResponse.Body))
 	}
 
 	if specification.ID == "" {
-		return specification, fmt.Errorf("response is empty for specification ID %s", specID)
+		return specification, fmt.Errorf("specification response is empty for specification ID %s", specID)
 	}
 
 	return specification, nil
