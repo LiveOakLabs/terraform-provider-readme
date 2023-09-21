@@ -23,28 +23,39 @@ Refer to <https://docs.readme.com/main/docs/rdme> for more information about usi
 
 ```terraform
 # Manage docs on ReadMe.
+
+# Create a category
+resource "readme_category" "example" {
+  title = "Example Category"
+  type  = "guide"
+}
+
+# Create a doc in the category
 resource "readme_doc" "example" {
-    # title can be specified as an attribute or in the body front matter.
-    title = "My Example Doc"
+  # title can be specified as an attribute or in the body front matter.
+  title = "My Example Doc"
 
-    # category can be specified as an attribute or in the body front matter.
-    # Use the `readme_category` resource to manage categories.
-    category = "633c5a54187d2c008e2e074c"
+  # category can be specified as an attribute or in the body front matter.
+  # Use the `readme_category` resource to manage categories.
+  category = readme_category.example.id
 
-    # category_slug can be specified as an attribute or in the body front matter.
-    # category_slug = "foo-bar"
+  # category_slug can be specified as an attribute or in the body front matter.
+  # category_slug = "foo-bar"
 
-    # hidden can be specified as an attribute or in the body front matter.
-    hidden = false
+  # hidden can be specified as an attribute or in the body front matter.
+  hidden = false
 
-    # order can be specified as an attribute or in the body front matter.
-    order = 99
+  # order can be specified as an attribute or in the body front matter.
+  order = 99
 
-    # type can be specified as an attribute or in the body front matter.
-    type = "basic"
+  # type can be specified as an attribute or in the body front matter.
+  type = "basic"
 
-    # body can be read from a file using Terraform's `file()` or `templatefile()` functions.
-    body = file("mydoc.md")
+  # body can be read from a file using Terraform's `file()` function.
+  # For best results, wrap the string with the `chomp()` function to remove
+  # trailing newlines. ReadMe's API trims these implicitly.
+  #body = chomp(file("mydoc.md"))
+  body = "Hello! Welcome to my document!"
 }
 ```
 
@@ -210,3 +221,12 @@ Read-Only:
 - `name` (String)
 - `slug` (String)
 - `type` (String)
+
+## Import
+
+Import is supported using the following syntax:
+
+```shell
+# Import a ReadMe doc using its slug.
+terraform import readme_doc.example example-slug
+```

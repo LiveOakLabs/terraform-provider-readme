@@ -45,7 +45,7 @@ func (r *docResource) Metadata(
 	resp.TypeName = req.ProviderTypeName + "_doc"
 }
 
-// Configure adds the provider configured client to the data source.
+// Configure adds the provider configured client to the resource.
 func (r *docResource) Configure(
 	_ context.Context,
 	req resource.ConfigureRequest,
@@ -205,32 +205,50 @@ func (r *docResource) Read(
 	resp *resource.ReadResponse,
 ) {
 	// Get current state.
-	var plan, state docModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &plan)...)
+	var state docModel
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	requestOpts := apiRequestOptions(plan.Version)
-	tflog.Info(ctx, fmt.Sprintf("retrieving doc with request options=%+v", requestOpts))
+	requestOpts := apiRequestOptions(state.Version)
+	logMsg := fmt.Sprintf("retrieving doc %s with request options=%+v", state.Slug.ValueString(), requestOpts)
+	tflog.Info(ctx, logMsg)
+
+	slug := state.Slug.ValueString()
+	id := state.ID.ValueString()
 
 	// Get the doc.
-	state, apiResponse, err := getDoc(r.client, ctx, state.Slug.ValueString(), plan, requestOpts)
+	state, apiResponse, err := getDoc(r.client, ctx, slug, state, requestOpts)
 	if err != nil {
-		if apiResponse.APIErrorResponse.Error == "DOC_NOTFOUND" {
-			resp.State.RemoveResource(ctx)
+		if apiResponse != nil && apiResponse.HTTPResponse.StatusCode == 404 {
+			// Attempt to find the doc by ID by searching all docs.
+			// While the slug is the primary identifier to request a doc, the
+			// slug is not stable and can be changed through the web UI.
+			tflog.Info(ctx, fmt.Sprintf("doc %s not found when looking up by slug, performing search", slug))
+			state, apiResponse, err = getDoc(r.client, ctx, "id:"+id, state, requestOpts)
+			if err != nil {
+				if strings.Contains(err.Error(), "no doc found matching id") {
+					tflog.Info(ctx, fmt.Sprintf("doc %s not found when searching by slug or ID %s, removing from state", slug, id))
+					resp.State.RemoveResource(ctx)
+
+					return
+				}
+				resp.Diagnostics.AddError("Unable to search for doc.", clientError(err, apiResponse))
+
+				return
+			}
+		} else {
+			resp.Diagnostics.AddError("Unable to retrieve doc.", clientError(err, apiResponse))
 
 			return
 		}
-
-		resp.Diagnostics.AddError("Unable to read doc.", err.Error())
-
-		return
 	}
 
 	// Set refreshed state.
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	diags = resp.State.Set(ctx, &state)
+	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		resp.Diagnostics.AddError(
 			"Unable to refresh doc.",

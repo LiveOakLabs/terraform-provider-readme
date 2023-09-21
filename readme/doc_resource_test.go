@@ -57,6 +57,13 @@ func TestDocResource(t *testing.T) {
 					mockAPIError.Error = "DOC_NOTFOUND"
 					gock.New(testURL).Get("/docs/" + mockDoc.Slug).Times(1).Reply(404).JSON(mockAPIError)
 
+					gock.New(testURL).
+						Post("/docs").
+						Path("search").
+						Times(1).
+						Reply(200).
+						JSON(readme.DocSearchResult{})
+
 					// Mock the request to create the resource.
 					gock.New(testURL).Post("/docs").Times(1).Reply(201).JSON(mockDoc)
 					// Mock the request to get and refresh the resource.
@@ -80,9 +87,9 @@ func TestDocResource(t *testing.T) {
 				),
 				PreConfig: func() {
 					gock.OffAll()
-					gock.New(testURL).Get("/docs/" + mockDoc.Slug).Times(1).Reply(400).JSON(mockDoc)
+					gock.New(testURL).Get("/docs/" + mockDoc.Slug).Times(1).Reply(400).JSON(mockAPIError)
 				},
-				ExpectError: regexp.MustCompile("Unable to read doc"),
+				ExpectError: regexp.MustCompile("API responded with a non-OK status: 400"),
 			},
 
 			// Test update results in error when the update action fails.
@@ -644,4 +651,87 @@ func TestDocResource_FrontMatter(t *testing.T) {
 			})
 		})
 	}
+}
+
+// TestDocRenamedSlugResource tests that a doc can be created and continue to
+// be managed by Terraform when the slug is changed outside of Terraform by
+// using the "get_slug" attribute.
+func TestDocRenamedSlugResource(t *testing.T) {
+	// Close all gocks after completion.
+	defer gock.OffAll()
+
+	renamed := mockDoc
+	renamed.Slug = "new-slug"
+	renamedSearch := mockDocSearchResponse
+	renamedSearch.Results[0].Slug = "new-slug"
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Test successful creation.
+			{
+				Config: providerConfig + fmt.Sprintf(`
+					resource "readme_doc" "test" {
+						title    = "%s"
+						body     = "%s"
+						category = "%s"
+						type     = "%s"
+					}`,
+					mockDoc.Title, mockDoc.Body, mockDoc.Category, mockDoc.Type,
+				),
+				PreConfig: func() {
+					docCommonGocks()
+					// Mock the request to create the resource.
+					gock.New(testURL).Post("/docs").Times(1).Reply(201).JSON(mockDoc)
+					// Mock the request to get and refresh the resource.
+					gock.New(testURL).Get("/docs/" + mockDoc.Slug).Times(2).Reply(200).JSON(mockDoc)
+				},
+				Check: docResourceCommonChecks(mockDoc, ""),
+			},
+
+			// Test that the doc can be renamed outside of Terraform and
+			// continue to be managed by Terraform.
+			{
+				Config: providerConfig + fmt.Sprintf(`
+					resource "readme_doc" "test" {
+						title    = "%s"
+						body     = "%s"
+						category = "%s"
+						type     = "%s"
+					}`,
+					renamed.Title, renamed.Body, renamed.Category, renamed.Type,
+				),
+				PreConfig: func() {
+					gock.OffAll()
+					docCommonGocks()
+
+					// Original slug is not found.
+					docNotFoundAPIError := mockAPIError
+					docNotFoundAPIError.Error = "DOC_NOTFOUND"
+					docNotFoundAPIError.Message = "Doc not found"
+					gock.New(testURL).Get("/docs/" + "a-test-doc").Times(1).Reply(404).JSON(docNotFoundAPIError)
+
+					// The slug won't exist, so the provider does a search by ID.
+					gock.New(testURL).
+						Post("/docs").
+						Path("search").
+						Times(1).
+						Reply(200).
+						JSON(mockDocSearchResponse)
+
+					// The matched doc is requested from the search results.
+					// It's also requested again after the rename.
+					gock.New(testURL).Get("/docs/" + "new-slug").Times(3).Reply(200).JSON(renamed)
+
+					// An update is triggered to match state with the new slug.
+					gock.New(testURL).Put("/docs/" + "new-slug").Times(1).Reply(200).JSON(renamed)
+
+					// Post-test deletion
+					gock.New(testURL).Delete("/docs/" + "new-slug").Times(1).Reply(204)
+				},
+				Check: docResourceCommonChecks(renamed, ""),
+			},
+		},
+	})
 }
