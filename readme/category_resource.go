@@ -260,7 +260,7 @@ func (r *categoryResource) Read(
 		apiRequestOptions(types.StringValue(version)),
 	)
 	if err != nil {
-		if apiResponse.APIErrorResponse.Error == "CATEGORY_NOTFOUND" {
+		if apiResponse != nil && apiResponse.APIErrorResponse.Error == "CATEGORY_NOTFOUND" {
 			resp.State.RemoveResource(ctx)
 
 			return
