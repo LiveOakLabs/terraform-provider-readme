@@ -462,8 +462,13 @@ func (r *apiSpecificationResource) save(
 	}
 
 	if err != nil {
-		return apiSpecificationResourceModel{}, fmt.Errorf("unable to save: %+v", apiResponse)
-	}
+		var status int
+		if apiResponse != nil {
+			status = apiResponse.HTTPResponse.StatusCode
+		}
+
+		return apiSpecificationResourceModel{},
+			fmt.Errorf("unable to save: (%d) %+v", status, apiResponse.APIErrorResponse) }
 
 	if response.ID == "" {
 		return apiSpecificationResourceModel{}, fmt.Errorf(
