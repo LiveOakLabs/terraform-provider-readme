@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/liveoaklabs/readme-api-go-client/readme"
+	"github.com/liveoaklabs/terraform-provider-readme/readme/frontmatter"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -83,7 +84,7 @@ func (r customPageResource) ValidateConfig(
 
 	if data.Title.IsNull() {
 		// check front matter for 'title'.
-		titleMatter, diag := valueFromFrontMatter(ctx, data.Body.ValueString(), "Title")
+		titleMatter, diag := frontmatter.GetValue(ctx, data.Body.ValueString(), "Title")
 		if diag != "" {
 			resp.Diagnostics.AddAttributeError(
 				path.Root("title"),
@@ -226,7 +227,7 @@ func (r *customPageResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Computed:    true,
 				Optional:    true,
 				PlanModifiers: []planmodifier.String{
-					fromMatterString("Title"),
+					frontmatter.GetString("Title"),
 				},
 			},
 			"slug": schema.StringAttribute{
@@ -270,7 +271,7 @@ func (r *customPageResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Optional:    true,
 				Default:     booldefault.StaticBool(true),
 				PlanModifiers: []planmodifier.Bool{
-					fromMatterBool("Hidden"),
+					frontmatter.GetBool("Hidden"),
 				},
 			},
 			"revision": schema.Int64Attribute{

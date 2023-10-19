@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/liveoaklabs/readme-api-go-client/readme"
+	"github.com/liveoaklabs/terraform-provider-readme/readme/otherattributemodifier"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -233,7 +234,7 @@ func (r *versionResource) Schema(
 				Description: "A 'clean' version string with certain characters replaced, usually a semantic version.",
 				Computed:    true,
 				PlanModifiers: []planmodifier.String{
-					changedIfOther(path.Root("version")),
+					otherattributemodifier.StringModifyString(path.Root("version"), "Version", false),
 				},
 			},
 		},

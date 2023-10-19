@@ -38,8 +38,8 @@ lint: modverify vet gofumpt lines golangci-lint ## Run all linters
 ## Testing ##
 .PHONY: test
 test: ## Run unit and race tests with 'go test'
-	go test -v -count=1 -parallel=4 -coverprofile=coverage.txt -covermode count ./readme/...
-	go test -race -short ./readme/...
+	go test -v -count=1 -parallel=4 -coverprofile=coverage.txt -covermode count ./readme/
+	go test -race -short ./readme/
 
 ## Coverage ##
 .PHONY: coverage
