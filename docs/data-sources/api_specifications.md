@@ -3,12 +3,12 @@
 page_title: "readme_api_specifications Data Source - readme"
 subcategory: ""
 description: |-
-  Retrieve multiple API specifications from ReadMe. The filter attribute may be used to filter API specifications by category ID, category slug, category title, title, version, or whether or not the API specifications have a category. See https://docs.readme.com/main/reference/getapispecification for more information about this API endpoint.
+  Retrieve multiple API specifications from ReadMe. The filter attribute may be used to filter API specifications by category ID, category slug, category title, version, or whether or not the API specifications have a category. See https://docs.readme.com/main/reference/getapispecification for more information about this API endpoint.
 ---
 
 # readme_api_specifications (Data Source)
 
-Retrieve multiple API specifications from ReadMe. The `filter` attribute may be used to filter API specifications by category ID, category slug, category title, title, version, or whether or not the API specifications have a category. See <https://docs.readme.com/main/reference/getapispecification> for more information about this API endpoint.
+Retrieve multiple API specifications from ReadMe. The `filter` attribute may be used to filter API specifications by category ID, category slug, category title, version, or whether or not the API specifications have a category. See <https://docs.readme.com/main/reference/getapispecification> for more information about this API endpoint.
 
 ## Example Usage
 
@@ -73,7 +73,7 @@ data "readme_api_specifications" "filter4" {
 
 ### Optional
 
-- `filter` (Attributes) Filter API specifications by the specified criteria. Ommitting this attribute will return all API specifications. All category filters are 'OR' filters except `has_category`, which works as an 'AND' filter with the other category filters. (see [below for nested schema](#nestedatt--filter))
+- `filter` (Attributes) Filter API specifications by the specified criteria. Omitting this attribute will return all API specifications. All category filters are 'OR' filters except `has_category`, which works as an 'AND' filter with the other category filters. (see [below for nested schema](#nestedatt--filter))
 - `sort_by` (String) Sort the returned API specifications by the specified key.Valid values are `title` or `last_synced`. If unset, API specifications are in the order they were returned by the API.
 
 ### Read-Only

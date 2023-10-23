@@ -91,6 +91,8 @@ func (d *docDataSource) Schema(
 	_ datasource.SchemaRequest,
 	resp *datasource.SchemaResponse,
 ) {
+	// nolint: goconst // Attribute descriptions are repeated across doc
+	// resources and data sources.
 	resp.Schema = schema.Schema{
 		Description: "Retrieve docs on ReadMe.com\n\n" +
 			"See <https://docs.readme.com/main/reference/getdoc> for more information about this API endpoint.\n\n",

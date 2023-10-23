@@ -72,6 +72,7 @@ func customPageResourceMapToModel(
 	if plan.HTML.IsUnknown() {
 		plan.HTML = types.StringValue("")
 	}
+
 	return customPageResourceModel{
 		Algolia:    docModelAlgoliaValue(page.Algolia),
 		Body:       plan.Body,
@@ -94,6 +95,8 @@ func customPageResourceMapToModel(
 // customPageDataSourceSchema returns the schema for the
 // readme_custom_page and readme_custom_pages data sources.
 func customPageDataSourceSchema() map[string]schema.Attribute {
+	// nolint:goconst // Attribute descriptions are
+	// repeated across resources and data sources.
 	return map[string]schema.Attribute{
 		"title": schema.StringAttribute{
 			Description: "The title of the custom page.",

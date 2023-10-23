@@ -88,7 +88,6 @@ func (d *customPagesDataSource) Configure(
 
 // Schema for the readme_custom_pages data source.
 func (d *customPagesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-
 	resp.Schema = schema.Schema{
 		Description: "Retrieve custom pages from the ReadMe API.\n\n" +
 			"See <https://docs.readme.com/reference/getcustompages> for more information about the API.",

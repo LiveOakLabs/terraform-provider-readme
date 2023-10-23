@@ -18,6 +18,14 @@ import (
 	"github.com/liveoaklabs/readme-api-go-client/readme"
 )
 
+const (
+	// IDPrefix is the prefix used for ReadMe resource IDs.
+	IDPrefix = "id:"
+
+	// UUIDPrefix is the prefix used for ReadMe UUIDs.
+	UUIDPrefix = "uuid:"
+)
+
 // Ensure the implementation satisfies the expected interfaces
 var _ provider.Provider = &readmeProvider{}
 
@@ -273,7 +281,7 @@ func apiRequestOptions(version basetypes.StringValue) readme.RequestOptions {
 
 // versionClean returns the "clean" version for a version ID.
 func versionClean(ctx context.Context, client *readme.Client, versionID string) string {
-	version, apiResponse, err := client.Version.Get("id:" + versionID)
+	version, apiResponse, err := client.Version.Get(IDPrefix + versionID)
 	if err != nil {
 		tflog.Info(
 			ctx,

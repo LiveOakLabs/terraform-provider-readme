@@ -1,3 +1,4 @@
+// nolint:goconst // Intentional repetition of some values for tests.
 package readme
 
 import (
@@ -25,12 +26,36 @@ func TestAPISpecificationResource_Create(t *testing.T) {
 				),
 				PreConfig: testdata.APISpecificationCreateRespond(mockVersionList),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("readme_api_specification.test", "id", testdata.APISpecifications[0].ID),
-					resource.TestCheckResourceAttr("readme_api_specification.test", "last_synced", testdata.APISpecifications[0].LastSynced),
-					resource.TestCheckResourceAttr("readme_api_specification.test", "source", testdata.APISpecifications[0].Source),
-					resource.TestCheckResourceAttr("readme_api_specification.test", "title", testdata.APISpecifications[0].Title),
-					resource.TestCheckResourceAttr("readme_api_specification.test", "type", testdata.APISpecifications[0].Type),
-					resource.TestCheckResourceAttr("readme_api_specification.test", "version", testdata.APISpecifications[0].Version),
+					resource.TestCheckResourceAttr(
+						"readme_api_specification.test",
+						"id",
+						testdata.APISpecifications[0].ID,
+					),
+					resource.TestCheckResourceAttr(
+						"readme_api_specification.test",
+						"last_synced",
+						testdata.APISpecifications[0].LastSynced,
+					),
+					resource.TestCheckResourceAttr(
+						"readme_api_specification.test",
+						"source",
+						testdata.APISpecifications[0].Source,
+					),
+					resource.TestCheckResourceAttr(
+						"readme_api_specification.test",
+						"title",
+						testdata.APISpecifications[0].Title,
+					),
+					resource.TestCheckResourceAttr(
+						"readme_api_specification.test",
+						"type",
+						testdata.APISpecifications[0].Type,
+					),
+					resource.TestCheckResourceAttr(
+						"readme_api_specification.test",
+						"version",
+						testdata.APISpecifications[0].Version,
+					),
 				),
 			},
 		},
@@ -56,7 +81,11 @@ func TestAPISpecificationResource_CreateDeleteCategory(t *testing.T) {
 				),
 				PreConfig: testdata.APISpecificationDeleteCategoryRespond(mockVersionList),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("readme_api_specification.test", "id", testdata.APISpecifications[0].ID),
+					resource.TestCheckResourceAttr(
+						"readme_api_specification.test",
+						"id",
+						testdata.APISpecifications[0].ID,
+					),
 				),
 			},
 		},

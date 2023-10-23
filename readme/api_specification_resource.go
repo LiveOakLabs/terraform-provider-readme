@@ -269,7 +269,7 @@ func (r *apiSpecificationResource) Read(
 	// Determine the version ID of the specification from the state or in the plan.
 	version := ""
 	if plan.Version.ValueString() != "" {
-		version = "id:" + plan.Version.ValueString()
+		version = IDPrefix + plan.Version.ValueString()
 	}
 
 	// Get the spec definition from the API registry if a registry UUID is available in the registry.
@@ -452,11 +452,11 @@ func (r *apiSpecificationResource) save(
 	if action == "update" {
 		response, apiResponse, err = r.client.APISpecification.Update(
 			specID,
-			"uuid:"+registry.RegistryUUID,
+			UUIDPrefix+registry.RegistryUUID,
 		)
 	} else {
 		response, apiResponse, err = r.client.APISpecification.Create(
-			"uuid:"+registry.RegistryUUID,
+			UUIDPrefix+registry.RegistryUUID,
 			requestOptions,
 		)
 	}
@@ -483,7 +483,7 @@ func (r *apiSpecificationResource) save(
 	// Get the spec plan.
 	plan, err = r.makePlan(response.ID, plan.Definition, registry.RegistryUUID, version)
 	if err != nil {
-		return apiSpecificationResourceModel{}, fmt.Errorf("unable to make plan: %+v", err)
+		return apiSpecificationResourceModel{}, fmt.Errorf("unable to make plan: %+w", err)
 	}
 
 	plan.DeleteCategory = deleteCategory
@@ -502,7 +502,7 @@ func (r *apiSpecificationResource) makePlan(
 	definition types.String,
 	registryUUID, version string,
 ) (apiSpecificationResourceModel, error) {
-	if strings.HasPrefix(version, "id:") {
+	if strings.HasPrefix(version, IDPrefix) {
 		versionInfo, _, err := r.client.Version.Get(version)
 		if err != nil {
 			return apiSpecificationResourceModel{}, fmt.Errorf("error resolving version: %w", err)
