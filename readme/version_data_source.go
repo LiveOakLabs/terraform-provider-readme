@@ -171,7 +171,7 @@ func (d *versionDataSource) Read(
 	} else if state.Version.ValueString() != "" {
 		reqVersion = state.Version.ValueString()
 	} else if state.ID.ValueString() != "" {
-		reqVersion = "id:" + state.ID.ValueString()
+		reqVersion = IDPrefix + state.ID.ValueString()
 	}
 
 	// Get the version.

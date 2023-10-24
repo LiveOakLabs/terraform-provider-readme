@@ -1,3 +1,4 @@
+// nolint:goconst // Intentional repetition of some values for tests.
 package readme
 
 import (
@@ -188,7 +189,11 @@ func TestCustomPageResource(t *testing.T) {
 				PreConfig: func() {
 					// Ensure any existing mocks are removed.
 					gock.OffAll()
-					gock.New(testURL).Get("/custompages/" + mockCustomPages[0].Slug).Times(2).Reply(200).JSON(mockCustomPages[0])
+					gock.New(testURL).
+						Get("/custompages/" + mockCustomPages[0].Slug).
+						Times(2).
+						Reply(200).
+						JSON(mockCustomPages[0])
 					gock.New(testURL).Delete("/custompages/" + mockCustomPages[0].Slug).Times(1).Reply(204)
 				},
 			},

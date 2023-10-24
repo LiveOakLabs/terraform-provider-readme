@@ -1,3 +1,4 @@
+// nolint:goconst // Intentional repetition of some values for tests.
 package readme
 
 import (
@@ -9,6 +10,8 @@ import (
 	"github.com/liveoaklabs/readme-api-go-client/readme"
 	"gopkg.in/h2non/gock.v1"
 )
+
+const versionEndpoint = "/version"
 
 func TestVersionResource(t *testing.T) {
 	// mockUpdatedVersion is used in the update tests.
@@ -35,17 +38,17 @@ func TestVersionResource(t *testing.T) {
 				PreConfig: func() {
 					// Post-create read and refresh.
 					gock.New(testURL).
-						Get("/version/" + mockVersion.Version).
+						Get(versionEndpoint + "/" + mockVersion.Version).
 						Times(2).
 						Reply(200).
 						JSON(mockVersion)
 					// Create resource.
 					gock.New(testURL).
-						Post("/version").
+						Post(versionEndpoint).
 						Times(1).
 						Reply(200).
 						JSON(mockVersion)
-					gock.New(testURL).Delete("/version/" + mockVersion.Version).Times(5).Reply(200)
+					gock.New(testURL).Delete(versionEndpoint + "/" + mockVersion.Version).Times(5).Reply(200)
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(
@@ -120,19 +123,19 @@ func TestVersionResource(t *testing.T) {
 				PreConfig: func() {
 					// Post-update read.
 					gock.New(testURL).
-						Get("/version/" + mockUpdatedVersion.Version).
+						Get(versionEndpoint + "/" + mockUpdatedVersion.Version).
 						Times(2).
 						Reply(200).
 						JSON(mockUpdatedVersion)
 					// Update resource.
 					gock.New(testURL).
-						Put("/version/" + mockVersion.Version).
+						Put(versionEndpoint + "/" + mockVersion.Version).
 						Times(1).
 						Reply(200).
 						JSON(mockUpdatedVersion)
 					// Read current version.
 					gock.New(testURL).
-						Get("/version/" + mockVersion.Version).
+						Get(versionEndpoint + "/" + mockVersion.Version).
 						Times(2).
 						Reply(200).
 						JSON(mockUpdatedVersion)
@@ -178,19 +181,19 @@ func TestVersionResource(t *testing.T) {
 					gock.OffAll()
 					// Expect the provider to read the updated version twice.
 					gock.New(testURL).
-						Get("/version/" + mockUpdatedVersion.Version).
+						Get(versionEndpoint + "/" + mockUpdatedVersion.Version).
 						Times(2).
 						Reply(200).
 						JSON(mockUpdatedVersion)
 					// Expect the replacement to POST a new version.
 					gock.New(testURL).
-						Post("/version").
+						Post(versionEndpoint).
 						Times(1).
 						Reply(200).
 						JSON(mockUpdatedVersion)
 					// Expect the current version to be deleted for replacement.
 					gock.New(testURL).
-						Delete("/version/" + mockUpdatedVersion.Version).
+						Delete(versionEndpoint + "/" + mockUpdatedVersion.Version).
 						Times(1).
 						Reply(200)
 				},
@@ -230,7 +233,7 @@ func TestVersionsResource_Error(t *testing.T) {
 			{
 				PreConfig: func() {
 					gock.New(testURL).
-						Post("/version").
+						Post(versionEndpoint).
 						Times(1).
 						Reply(400).
 						JSON(expectCreateResponse)

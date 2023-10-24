@@ -157,7 +157,7 @@ func getDoc(
 		)
 
 		category, apiResponse, err := client.Category.Get(
-			"id:"+state.Category.ValueString(),
+			IDPrefix+state.Category.ValueString(),
 			options,
 		)
 		if err != nil {
@@ -177,7 +177,7 @@ func getDoc(
 				),
 			)
 
-			parent, apiResponse, err := client.Doc.Get("id:"+state.ParentDoc.ValueString(), options)
+			parent, apiResponse, err := client.Doc.Get(IDPrefix+state.ParentDoc.ValueString(), options)
 			if err != nil {
 				// failing here
 				return state, apiResponse, errors.New(clientError(err, apiResponse))

@@ -85,15 +85,17 @@ func (d *apiSpecificationsDataSource) Schema(
 	_ datasource.SchemaRequest,
 	resp *datasource.SchemaResponse,
 ) {
+	// nolint:goconst // Some attribute descriptions are
+	// repeated across data sources and resources.
 	resp.Schema = schema.Schema{
 		Description: "Retrieve multiple API specifications from ReadMe. " +
 			"The `filter` attribute may be used to filter API specifications by category ID, category slug, category " +
-			"title, title, version, or whether or not the API specifications have a category. " +
+			"title, version, or whether or not the API specifications have a category. " +
 			"See <https://docs.readme.com/main/reference/getapispecification> for more information about this API " +
 			"endpoint.",
 		Attributes: map[string]schema.Attribute{
 			"filter": schema.SingleNestedAttribute{
-				Description: "Filter API specifications by the specified criteria. Ommitting this attribute will " +
+				Description: "Filter API specifications by the specified criteria. Omitting this attribute will " +
 					"return all API specifications. All category filters are 'OR' filters except `has_category`, which " +
 					"works as an 'AND' filter with the other category filters.",
 				Optional: true,
@@ -301,6 +303,7 @@ func specMatchesMultiFilters(
 
 	if !passCategory {
 		tflog.Info(ctx, fmt.Sprintf("Skipping API specification %s due to category visibility.", spec.ID))
+
 		return false
 	}
 
@@ -310,6 +313,7 @@ func specMatchesMultiFilters(
 		filter.CategoryID == nil &&
 		filter.CategorySlug == nil &&
 		filter.CategoryTitle == nil {
+
 		return true
 	}
 
@@ -317,6 +321,7 @@ func specMatchesMultiFilters(
 	for _, title := range filter.Title {
 		if spec.Title == title.ValueString() {
 			tflog.Info(ctx, fmt.Sprintf("API specification %s matched title filter.", spec.Title))
+
 			return true
 		}
 	}
@@ -325,6 +330,7 @@ func specMatchesMultiFilters(
 	for _, version := range filter.Version {
 		if spec.Version == version.ValueString() {
 			tflog.Info(ctx, fmt.Sprintf("API specification %s matched version filter.", spec.Version))
+
 			return true
 		}
 	}
@@ -333,6 +339,7 @@ func specMatchesMultiFilters(
 	for _, categoryID := range filter.CategoryID {
 		if passCategory && spec.Category.ID == categoryID.ValueString() {
 			tflog.Info(ctx, fmt.Sprintf("API specification %s matched category ID filter.", spec.Category.ID))
+
 			return true
 		}
 	}
@@ -341,6 +348,7 @@ func specMatchesMultiFilters(
 	for _, categorySlug := range filter.CategorySlug {
 		if passCategory && spec.Category.Slug == categorySlug.ValueString() {
 			tflog.Info(ctx, fmt.Sprintf("API specification %s matched category slug filter.", spec.Category.Slug))
+
 			return true
 		}
 	}
@@ -354,6 +362,7 @@ func specMatchesMultiFilters(
 					"API specification %s category %s matched category title filter.", spec.Title, spec.Category.Title,
 				),
 			)
+
 			return true
 		}
 	}

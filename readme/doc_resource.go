@@ -217,20 +217,24 @@ func (r *docResource) Read(
 	tflog.Info(ctx, logMsg)
 
 	slug := state.Slug.ValueString()
-	id := state.ID.ValueString()
+	stateID := state.ID.ValueString()
 
 	// Get the doc.
 	state, apiResponse, err := getDoc(r.client, ctx, slug, state, requestOpts)
-	if err != nil {
+	if err != nil { // nolint:nestif // TODO: refactor
 		if apiResponse != nil && apiResponse.HTTPResponse.StatusCode == 404 {
 			// Attempt to find the doc by ID by searching all docs.
 			// While the slug is the primary identifier to request a doc, the
 			// slug is not stable and can be changed through the web UI.
 			tflog.Info(ctx, fmt.Sprintf("doc %s not found when looking up by slug, performing search", slug))
-			state, apiResponse, err = getDoc(r.client, ctx, "id:"+id, state, requestOpts)
+			state, apiResponse, err = getDoc(r.client, ctx, IDPrefix+stateID, state, requestOpts)
 			if err != nil {
 				if strings.Contains(err.Error(), "no doc found matching id") {
-					tflog.Info(ctx, fmt.Sprintf("doc %s not found when searching by slug or ID %s, removing from state", slug, id))
+					tflog.Info(
+						ctx,
+						fmt.Sprintf(
+							"doc %s not found when searching by slug or ID %s, removing from state",
+							slug, stateID))
 					resp.State.RemoveResource(ctx)
 
 					return
@@ -365,7 +369,7 @@ func (r *docResource) docValidParent(
 	options readme.RequestOptions,
 ) (bool, string) {
 	if plan.ParentDoc.ValueString() != "" {
-		attrVal := "id:" + plan.ParentDoc.ValueString()
+		attrVal := IDPrefix + plan.ParentDoc.ValueString()
 		_, _, err := r.client.Doc.Get(attrVal, options)
 		if err != nil {
 			return false,

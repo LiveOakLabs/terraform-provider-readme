@@ -1,3 +1,4 @@
+// nolint:goconst // Intentional repetition of some values for tests.
 package readme
 
 import (
@@ -236,21 +237,21 @@ func TestAPISpecificationDataSource(t *testing.T) {
 		},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
 			response := testdata.ToJSON(testResponse)
-			if tc.response != "" {
-				response = tc.response
+			if testCase.response != "" {
+				response = testCase.response
 			}
 
-			if tc.expectError != "" {
+			if testCase.expectError != "" {
 				resource.Test(t, resource.TestCase{
 					IsUnitTest:               true,
 					ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 					Steps: []resource.TestStep{
 						{
-							Config:      providerConfig + tc.config,
-							ExpectError: regexp.MustCompile(tc.expectError),
+							Config:      providerConfig + testCase.config,
+							ExpectError: regexp.MustCompile(testCase.expectError),
 							PreConfig:   testdata.APISpecificationRespond(response, 200),
 						},
 					},
@@ -261,7 +262,7 @@ func TestAPISpecificationDataSource(t *testing.T) {
 					ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 					Steps: []resource.TestStep{
 						{
-							Config: providerConfig + tc.config,
+							Config: providerConfig + testCase.config,
 							Check: resource.ComposeAggregateTestCheckFunc(
 								resource.TestCheckResourceAttr(
 									"data.readme_api_specification.test",

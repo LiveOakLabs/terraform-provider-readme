@@ -1,3 +1,4 @@
+// nolint:goconst // Intentional repetition of some values for tests.
 package readme
 
 import (
@@ -202,6 +203,7 @@ func docResourceCommonChecks(mock readme.Doc, prefix string) resource.TestCheckF
 	if prefix == "data." {
 		mockDocBodyString = mockDoc.Body
 	}
+
 	return resource.ComposeAggregateTestCheckFunc(
 		resource.TestCheckResourceAttr(
 			prefix+"readme_doc.test",

@@ -74,6 +74,7 @@ func (d *apiSpecificationDataSource) Schema(
 	_ datasource.SchemaRequest,
 	resp *datasource.SchemaResponse,
 ) {
+	// nolint: goconst // Attribute descriptions are reused.
 	resp.Schema = schema.Schema{
 		Description: "Retrieve metadata about an API specification on ReadMe.com\n\n" +
 			"An ID or title must be specified to retrieve an API specification. The `filter` attribute may be used " +
@@ -177,7 +178,7 @@ func (d *apiSpecificationDataSource) Read(
 	)
 
 	// If an ID is specified, use that to retrieve the API specification.
-	if state.ID.ValueString() != "" {
+	if state.ID.ValueString() != "" { // nolint: nestif // TODO: Refactor.
 		// Get API specification by ID.
 		apiSpec, apiResponse, err = d.client.APISpecification.Get(state.ID.ValueString())
 		if err != nil {
@@ -226,6 +227,7 @@ func (d *apiSpecificationDataSource) Read(
 			}
 
 			apiSpec = spec
+
 			break
 		}
 

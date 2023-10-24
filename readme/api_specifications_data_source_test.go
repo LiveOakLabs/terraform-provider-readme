@@ -244,7 +244,7 @@ func TestAPISpecificationsDataSource(t *testing.T) {
 		},
 	}
 
-	for _, tc := range testCases {
+	for _, tc := range testCases { // nolint:varnamelen
 		t.Run(tc.name, func(t *testing.T) {
 			response := testdata.APISpecifications
 			if tc.response != nil {
@@ -310,7 +310,7 @@ func apiSpecificationsChecks(t *testing.T, specs, excluded []readme.APISpecifica
 	}
 
 	// Ensure the specs returned are correct.
-	for i, spec := range specs {
+	for i, spec := range specs { // nolint:varnamelen
 		checks = append(checks, resource.TestCheckResourceAttr(
 			"data.readme_api_specifications.test",
 			fmt.Sprintf("specs.%d.id", i),
