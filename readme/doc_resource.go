@@ -17,6 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/liveoaklabs/readme-api-go-client/readme"
+	"github.com/liveoaklabs/terraform-provider-readme/readme/frontmatter"
+	"github.com/liveoaklabs/terraform-provider-readme/readme/otherattributemodifier"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -70,7 +72,7 @@ func (r docResource) ValidateConfig(
 	// category or category_slug must be set. If the attributes aren't set, check the body front matter.
 	if data.Category.IsNull() && data.CategorySlug.IsNull() {
 		// check front matter for 'category'.
-		categoryMatter, diag := valueFromFrontMatter(ctx, data.Body.ValueString(), "Category")
+		categoryMatter, diag := frontmatter.GetValue(ctx, data.Body.ValueString(), "Category")
 		if diag != "" {
 			resp.Diagnostics.AddAttributeError(
 				path.Root("category"),
@@ -82,7 +84,7 @@ func (r docResource) ValidateConfig(
 		}
 
 		// check front matter for 'category_slug'.
-		categorySlugMatter, diag := valueFromFrontMatter(
+		categorySlugMatter, diag := frontmatter.GetValue(
 			ctx,
 			data.Body.ValueString(),
 			"CategorySlug",
@@ -416,6 +418,23 @@ func (r *docResource) Schema(
 					},
 					"updated_at": schema.StringAttribute{
 						Computed: true,
+						PlanModifiers: []planmodifier.String{
+							otherattributemodifier.StringModifyString(path.Root("body"), "Body", true),
+							otherattributemodifier.StringModifyString(path.Root("body_html"), "BodyHTML", true),
+							otherattributemodifier.StringModifyString(path.Root("category"), "Category", true),
+							otherattributemodifier.StringModifyString(path.Root("category_slug"), "CategorySlug", true),
+							otherattributemodifier.BoolModifyString(path.Root("hidden"), "Hidden", true),
+							otherattributemodifier.Int64ModifyString(path.Root("order"), "Order", true),
+							otherattributemodifier.StringModifyString(path.Root("parent_doc"), "ParentDoc", true),
+							otherattributemodifier.StringModifyString(
+								path.Root("parent_doc_slug"),
+								"ParentDocSlug",
+								true,
+							),
+							otherattributemodifier.StringModifyString(path.Root("slug"), "Slug", true),
+							otherattributemodifier.StringModifyString(path.Root("title"), "Title", true),
+							otherattributemodifier.StringModifyString(path.Root("type"), "Type", true),
+						},
 					},
 				},
 			},
@@ -538,7 +557,7 @@ func (r *docResource) Schema(
 				Optional:   true,
 				Validators: []validator.String{},
 				PlanModifiers: []planmodifier.String{
-					fromMatterString("Category"),
+					frontmatter.GetString("Category"),
 				},
 			},
 			"category_slug": schema.StringAttribute{
@@ -549,7 +568,7 @@ func (r *docResource) Schema(
 				Computed: true,
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					fromMatterString("CategorySlug"),
+					frontmatter.GetString("CategorySlug"),
 				},
 			},
 			"created_at": schema.StringAttribute{
@@ -582,7 +601,7 @@ func (r *docResource) Schema(
 				Computed:    true,
 				Optional:    true,
 				PlanModifiers: []planmodifier.Bool{
-					fromMatterBool("Hidden"),
+					frontmatter.GetBool("Hidden"),
 				},
 			},
 			"icon": schema.StringAttribute{
@@ -664,7 +683,7 @@ func (r *docResource) Schema(
 				Computed: true,
 				Optional: true,
 				PlanModifiers: []planmodifier.Int64{
-					fromMatterInt64("Order"),
+					frontmatter.GetInt64("Order"),
 				},
 			},
 			"parent_doc": schema.StringAttribute{
@@ -676,7 +695,7 @@ func (r *docResource) Schema(
 				Computed: true,
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					fromMatterString("ParentDoc"),
+					frontmatter.GetString("ParentDoc"),
 				},
 			},
 			"parent_doc_slug": schema.StringAttribute{
@@ -687,7 +706,7 @@ func (r *docResource) Schema(
 				Computed: true,
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					fromMatterString("ParentDocSlug"),
+					frontmatter.GetString("ParentDocSlug"),
 				},
 			},
 			"previous_slug": schema.StringAttribute{
@@ -700,6 +719,19 @@ func (r *docResource) Schema(
 			"revision": schema.Int64Attribute{
 				Description: "A number that is incremented upon doc updates.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.Int64{
+					otherattributemodifier.StringModifyInt64(path.Root("body"), "Body", true),
+					otherattributemodifier.StringModifyInt64(path.Root("body_html"), "BodyHTML", true),
+					otherattributemodifier.StringModifyInt64(path.Root("category"), "Category", true),
+					otherattributemodifier.StringModifyInt64(path.Root("category_slug"), "CategorySlug", true),
+					otherattributemodifier.BoolModifyInt64(path.Root("hidden"), "Hidden", true),
+					otherattributemodifier.Int64ModifyInt64(path.Root("order"), "Order", true),
+					otherattributemodifier.StringModifyInt64(path.Root("parent_doc"), "ParentDoc", true),
+					otherattributemodifier.StringModifyInt64(path.Root("parent_doc_slug"), "ParentDocSlug", true),
+					otherattributemodifier.StringModifyInt64(path.Root("slug"), "Slug", true),
+					otherattributemodifier.StringModifyInt64(path.Root("title"), "Title", true),
+					otherattributemodifier.StringModifyInt64(path.Root("type"), "Type", true),
+				},
 			},
 			"slug": schema.StringAttribute{
 				Description: "The slug of the doc.",
@@ -718,7 +750,7 @@ func (r *docResource) Schema(
 				Computed: true,
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					fromMatterString("Title"),
+					frontmatter.GetString("Title"),
 				},
 			},
 			"type": schema.StringAttribute{
@@ -729,12 +761,25 @@ func (r *docResource) Schema(
 				Computed: true,
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					fromMatterString("Type"),
+					frontmatter.GetString("Type"),
 				},
 			},
 			"updated_at": schema.StringAttribute{
 				Description: "The timestamp of when the doc was last updated.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					otherattributemodifier.StringModifyString(path.Root("body"), "Body", true),
+					otherattributemodifier.StringModifyString(path.Root("body_html"), "BodyHTML", true),
+					otherattributemodifier.StringModifyString(path.Root("category"), "Category", true),
+					otherattributemodifier.StringModifyString(path.Root("category_slug"), "CategorySlug", true),
+					otherattributemodifier.BoolModifyString(path.Root("hidden"), "Hidden", true),
+					otherattributemodifier.Int64ModifyString(path.Root("order"), "Order", true),
+					otherattributemodifier.StringModifyString(path.Root("parent_doc"), "ParentDoc", true),
+					otherattributemodifier.StringModifyString(path.Root("parent_doc_slug"), "ParentDocSlug", true),
+					otherattributemodifier.StringModifyString(path.Root("slug"), "Slug", true),
+					otherattributemodifier.StringModifyString(path.Root("title"), "Title", true),
+					otherattributemodifier.StringModifyString(path.Root("type"), "Type", true),
+				},
 			},
 			"user": schema.StringAttribute{
 				Description: "The ID of the author of the doc in the web editor.",

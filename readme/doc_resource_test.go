@@ -28,7 +28,7 @@ func TestDocResource(t *testing.T) {
 						category = "%s"
 						type     = "%s"
 					}`,
-					mockDoc.Title, mockDocBodyString, mockDoc.Category, mockDoc.Type,
+					mockDoc.Title, mockDoc.Body, mockDoc.Category, mockDoc.Type,
 				),
 				PreConfig: func() {
 					docCommonGocks()
@@ -49,7 +49,7 @@ func TestDocResource(t *testing.T) {
 						category = "%s"
 						type     = "%s"
 					}`,
-					mockDoc.Title, mockDocBodyString, mockDoc.Category, mockDoc.Type,
+					mockDoc.Title, mockDoc.Body, mockDoc.Category, mockDoc.Type,
 				),
 				PreConfig: func() {
 					gock.OffAll()
@@ -84,13 +84,13 @@ func TestDocResource(t *testing.T) {
 						category = "%s"
 						type     = "%s"
 					}`,
-					mockDocBodyString, mockDoc.Category, mockDoc.Type,
+					mockDoc.Body, mockDoc.Category, mockDoc.Type,
 				),
 				PreConfig: func() {
 					gock.OffAll()
 					gock.New(testURL).Get("/docs/" + mockDoc.Slug).Times(1).Reply(400).JSON(mockAPIError)
 				},
-				ExpectError: regexp.MustCompile("API responded with a non-OK status: 400"),
+				ExpectError: regexp.MustCompile("DOC_NOTFOUND"),
 			},
 
 			// Test update results in error when the update action fails.
@@ -102,7 +102,7 @@ func TestDocResource(t *testing.T) {
 						category = "%s"
 						type     = "%s"
 					}`,
-					mockDocBodyString, mockDoc.Category, mockDoc.Type,
+					mockDoc.Body, mockDoc.Category, mockDoc.Type,
 				),
 				PreConfig: func() {
 					gock.OffAll()
@@ -131,7 +131,7 @@ func TestDocResource(t *testing.T) {
 						category = "%s"
 						type     = "%s"
 					}`,
-					mockDocBodyString, mockDoc.Category, mockDoc.Type,
+					mockDoc.Body, mockDoc.Category, mockDoc.Type,
 				),
 				PreConfig: func() {
 					gock.OffAll()
@@ -159,7 +159,7 @@ func TestDocResource(t *testing.T) {
 						category = "%s"
 						type     = "%s"
 					}`,
-					mockDoc.Title, mockDocBodyString, mockDoc.Category, mockDoc.Type,
+					mockDoc.Title, mockDoc.Body, mockDoc.Category, mockDoc.Type,
 				),
 				PreConfig: func() {
 					gock.OffAll()
@@ -179,7 +179,7 @@ func TestDocResource(t *testing.T) {
 						category = "%s"
 						type     = "%s"
 					}`,
-					mockDocBodyString, mockDoc.Category, mockDoc.Type,
+					mockDoc.Body, mockDoc.Category, mockDoc.Type,
 				),
 				PreConfig: func() {
 					gock.OffAll()

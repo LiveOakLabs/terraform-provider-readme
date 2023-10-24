@@ -106,9 +106,6 @@ var mockDoc readme.Doc = readme.Doc{
 	Version:       mockVersion.ID,
 }
 
-// mockDocBodyString represents a "raw" body string provided in the configuration with extraneous whitespace.
-var mockDocBodyString string = fmt.Sprintf(`  \n%s\n\n `, mockDoc.Body)
-
 // makeMockDocParent returns a doc for use as a 'parent' doc.
 func makeMockDocParent() readme.Doc {
 	parentDoc := mockDoc
@@ -200,10 +197,6 @@ func docCommonGocks() {
 
 // docResourceCommonChecks returns all attribute checks for the data source and resource.
 func docResourceCommonChecks(mock readme.Doc, prefix string) resource.TestCheckFunc {
-	if prefix == "data." {
-		mockDocBodyString = mockDoc.Body
-	}
-
 	return resource.ComposeAggregateTestCheckFunc(
 		resource.TestCheckResourceAttr(
 			prefix+"readme_doc.test",
@@ -288,7 +281,7 @@ func docResourceCommonChecks(mock readme.Doc, prefix string) resource.TestCheckF
 			fmt.Sprintf("%v", mock.API.Results.Codes[0].Status),
 		),
 		resource.TestCheckResourceAttr(prefix+"readme_doc.test", "api.url", mock.API.URL),
-		resource.TestCheckResourceAttr(prefix+"readme_doc.test", "body", mockDocBodyString),
+		resource.TestCheckResourceAttr(prefix+"readme_doc.test", "body", mock.Body),
 		resource.TestCheckResourceAttr(prefix+"readme_doc.test", "body_clean", mock.Body),
 		resource.TestCheckResourceAttr(prefix+"readme_doc.test", "body_html", mock.BodyHTML),
 		resource.TestCheckResourceAttr(prefix+"readme_doc.test", "category", mock.Category),

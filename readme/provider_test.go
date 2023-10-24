@@ -1,6 +1,7 @@
 package readme
 
 import (
+	"os"
 	"regexp"
 	"strings"
 	"testing"
@@ -65,6 +66,10 @@ func replaceNewlines(str string) string {
 func TestProvider_MissingAPIToken(t *testing.T) {
 	expectError, _ := regexp.Compile(`Missing ReadMe API Token`)
 
+	// Unset from environment.
+	prevValue := os.Getenv("README_API_TOKEN")
+	os.Setenv("README_API_TOKEN", "")
+
 	invalidProviderConfig := `
 	provider "readme" {
 		api_token = ""
@@ -81,6 +86,11 @@ func TestProvider_MissingAPIToken(t *testing.T) {
 			},
 		},
 	})
+
+	// Reset environment.
+	if prevValue != "" {
+		os.Setenv("README_API_TOKEN", prevValue)
+	}
 }
 
 func TestProvider_EmptyAPIURL(t *testing.T) {
