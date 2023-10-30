@@ -117,7 +117,7 @@ func (m FrontMatterModifier) PlanModifyInt64(
 			return
 		}
 		if value != (reflect.Value{}) && value.CanInterface() {
-			resp.PlanValue = types.Int64Value(int64(value.Elem().Int()))
+			resp.PlanValue = types.Int64Value(int64(value.Int()))
 		}
 	}
 }

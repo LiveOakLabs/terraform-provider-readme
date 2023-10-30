@@ -24,7 +24,7 @@ type ReadmeFrontMatter struct {
 	Hidden        *bool                 `yaml:"hidden"`                  // changelogs, custom pages, docs
 	HTML          string                `yaml:"html,omitempty"`          // custom page
 	HTMLMode      *bool                 `yaml:"htmlmode"`                // custom page
-	Order         *int                  `yaml:"order"`                   // docs
+	Order         int64                 `yaml:"order"`                   // docs
 	ParentDoc     string                `yaml:"parentDoc,omitempty"`     // docs
 	ParentDocSlug string                `yaml:"parentDocSlug,omitempty"` // docs
 	Title         string                `yaml:"title"`                   // changelogs, custom pages, docs
@@ -66,7 +66,6 @@ func GetValue(ctx context.Context, body, attribute string) (reflect.Value, strin
 	// If the field exists and is empty, return an empty value.
 	if field.IsZero() {
 		tflog.Debug(ctx, fmt.Sprintf("no front matter found for attribute %s", attribute))
-		tflog.Info(ctx, fmt.Sprintf("no front matter found for attribute %s", attribute))
 
 		return reflect.Value{}, ""
 	}
