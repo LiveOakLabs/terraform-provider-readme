@@ -18,11 +18,11 @@ See <https://docs.readme.com/main/reference/getdoc> for more information about t
 ```terraform
 # Retrieve a doc from ReadMe.
 data "readme_doc" "example" {
-    slug = "my-example-doc"
+  slug = "my-example-doc"
 }
 
 output "example_doc" {
-    value = data.readme_doc.example
+  value = data.readme_doc.example
 }
 ```
 

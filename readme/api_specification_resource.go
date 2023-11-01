@@ -137,7 +137,7 @@ func (r *apiSpecificationResource) Schema(
 			"current UUID. Forcing a Terraform update (e.g. tainting or a manual change) will get things " +
 			"synchronized again.\n\n" +
 			"## Importing Existing Specifications\n\n" +
-			"Importing API specifications is also limited due to the behavior of the API registry and associating a " +
+			"Importing API specifications is limited due to the behavior of the API registry and associating a " +
 			"specification with its definition. When importing, Terraform will replace the remote definition on its " +
 			"next run, regardless if it differs from the local definition. This will associate a registry UUID " +
 			"with the specification.\n\n" +

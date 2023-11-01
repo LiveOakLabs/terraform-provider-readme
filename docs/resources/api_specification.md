@@ -8,7 +8,7 @@ description: |-
   External Changes
   External changes made to an API specification managed by Terraform will not be detected due to the way the API registry works. When a specification definition is updated, the registry UUID changes and is only available from the response when the definition is published to the registry. When Terraform runs after an external update, there's no way of programatically retrieving the current state without the current UUID. Forcing a Terraform update (e.g. tainting or a manual change) will get things synchronized again.
   Importing Existing Specifications
-  Importing API specifications is also limited due to the behavior of the API registry and associating a specification with its definition. When importing, Terraform will replace the remote definition on its next run, regardless if it differs from the local definition. This will associate a registry UUID with the specification.
+  Importing API specifications is limited due to the behavior of the API registry and associating a specification with its definition. When importing, Terraform will replace the remote definition on its next run, regardless if it differs from the local definition. This will associate a registry UUID with the specification.
   See https://docs.readme.com/main/reference/uploadapispecification for more information about this API endpoint.
 ---
 
@@ -24,7 +24,7 @@ External changes made to an API specification managed by Terraform will not be d
 
 ## Importing Existing Specifications
 
-Importing API specifications is also limited due to the behavior of the API registry and associating a specification with its definition. When importing, Terraform will replace the remote definition on its next run, regardless if it differs from the local definition. This will associate a registry UUID with the specification.
+Importing API specifications is limited due to the behavior of the API registry and associating a specification with its definition. When importing, Terraform will replace the remote definition on its next run, regardless if it differs from the local definition. This will associate a registry UUID with the specification.
 
 See <https://docs.readme.com/main/reference/uploadapispecification> for more information about this API endpoint.
 

@@ -27,11 +27,11 @@ data "readme_api_registry" "example" {
 
 # Output the API specification from the registry.
 output "example_api_registry" {
-    value = data.readme_api_registry.example.definition
+  value = data.readme_api_registry.example.definition
 }
 
 output "example_registry_uuid" {
-    value = data.readme_api_registry.example.uuid
+  value = data.readme_api_registry.example.uuid
 }
 ```
 

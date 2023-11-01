@@ -4,17 +4,20 @@ page_title: "readme_custom_page Resource - readme"
 subcategory: ""
 description: |-
   Manage custom pages on ReadMe.com
-  See https://docs.readme.com/main/reference/createcustompage for more information about this API endpoint.
+  Custom pages on ReadMe support setting some attributes using front matter. Resource attributes take precedence over front matter attributes in the provider.
   Refer to https://docs.readme.com/main/docs/rdme for more information about using front matter in ReadMe docs and custom pages.
+  See https://docs.readme.com/main/reference/createcustompage for more information about this API endpoint.
 ---
 
 # readme_custom_page (Resource)
 
 Manage custom pages on ReadMe.com
 
-See <https://docs.readme.com/main/reference/createcustompage> for more information about this API endpoint.
+Custom pages on ReadMe support setting some attributes using front matter. Resource attributes take precedence over front matter attributes in the provider.
 
 Refer to <https://docs.readme.com/main/docs/rdme> for more information about using front matter in ReadMe docs and custom pages.
+
+See <https://docs.readme.com/main/reference/createcustompage> for more information about this API endpoint.
 
 ## Example Usage
 
@@ -44,11 +47,11 @@ resource "readme_custom_page" "example_html" {
 
 ### Optional
 
-- `body` (String) The body of the custom page.
-- `hidden` (Boolean) Whether the custom page is hidden.
+- `body` (String) The body of the custom page. Optionally use front matter to set certain attributes. Alternatively, use the `html_mode` and `html` attributes to set the body in HTML format.
+- `hidden` (Boolean) Whether the custom page is hidden. This can alternatively be set using the `hidden` front matter key.
 - `html` (String) The body source formatted in HTML. Only displayed if `htmlmode` is set to `true`. Leading and trailing whitespace and certain HTML tags are removed when uploaded to ReadMe. The `html_clean` attribute will contain the normalized HTML.
 - `html_mode` (Boolean) Set to `true` if `html` should be displayed, otherwise `body` will be displayed.
-- `title` (String) The title of the custom page. This can also be set using the `title` front matter.
+- `title` (String) The title of the custom page. This can alternatively be set using the `title` front matter key.
 
 ### Read-Only
 
@@ -81,3 +84,12 @@ Read-Only:
 - `description` (String)
 - `image` (List of String)
 - `title` (String)
+
+## Import
+
+Import is supported using the following syntax:
+
+```shell
+# Import a custom page using its slug.
+terraform import readme_custom_page.example example-slug
+```

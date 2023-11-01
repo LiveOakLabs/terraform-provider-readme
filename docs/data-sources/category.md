@@ -18,11 +18,11 @@ See <https://docs.readme.com/main/reference/getcategory> for more information ab
 ```terraform
 # The "readme_category" data source retrieves a single category's metadata.
 data "readme_category" "example" {
-    slug = "example"
+  slug = "example"
 }
 
 output "category" {
-    value = data.readme_category.example
+  value = data.readme_category.example
 }
 ```
 

@@ -53,8 +53,8 @@ Create a category:
 
 ```terraform
 resource "readme_category" "example" {
-    title = "My example category"
-    type  = "guide"
+  title = "My example category"
+  type  = "guide"
 }
 ```
 
@@ -62,23 +62,23 @@ Create a doc:
 
 ```terraform
 resource "readme_doc" "example" {
-    # title can be specified as an attribute or in the body front matter.
-    title = "My Example Doc"
+  # title can be specified as an attribute or in the body front matter.
+  title = "My Example Doc"
 
-    # category_slug can be specified as an attribute or in the body front matter.
-    category_slug = readme_category.example.slug
+  # category_slug can be specified as an attribute or in the body front matter.
+  category_slug = readme_category.example.slug
 
-    # hidden can be specified as an attribute or in the body front matter.
-    hidden = false
+  # hidden can be specified as an attribute or in the body front matter.
+  hidden = false
 
-    # order can be specified as an attribute or in the body front matter.
-    order = 99
+  # order can be specified as an attribute or in the body front matter.
+  order = 99
 
-    # type can be specified as an attribute or in the body front matter.
-    type = "basic"
+  # type can be specified as an attribute or in the body front matter.
+  type = "basic"
 
-    # body can be read from a file using Terraform's `file()` function.
-    body = file("mydoc.md")
+  # body can be read from a file using Terraform's `file()` function.
+  body = file("mydoc.md")
 }
 ```
 

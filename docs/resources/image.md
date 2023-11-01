@@ -21,11 +21,11 @@ Images are not truly stateful - the provider tracks the local source image for c
 ```terraform
 # Upload an image to ReadMe.
 resource "readme_image" "example" {
-    source = "example.png"
+  source = "example.png"
 }
 
 output "image_info" {
-    value = readme_image.example
+  value = readme_image.example
 }
 ```
 
