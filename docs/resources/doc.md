@@ -4,20 +4,20 @@ page_title: "readme_doc Resource - readme"
 subcategory: ""
 description: |-
   Manage docs on ReadMe.com
+  Docs on ReadMe support setting some attributes using front matter. Resource attributes take precedence over front matter attributes in the provider.
+  Refer to https://docs.readme.com/main/docs/rdme for more information about using front matter in ReadMe docs and custom pages.
   See https://docs.readme.com/main/reference/getdoc for more information about this API endpoint.
-  All of the optional attributes except body may alternatively be set in the body's front matter. Attributes take precedence over values set in front matter.
-  Refer to https://docs.readme.com/main/docs/rdme for more information about using front matter in ReadMe docs.
 ---
 
 # readme_doc (Resource)
 
 Manage docs on ReadMe.com
 
+Docs on ReadMe support setting some attributes using front matter. Resource attributes take precedence over front matter attributes in the provider.
+
+Refer to <https://docs.readme.com/main/docs/rdme> for more information about using front matter in ReadMe docs and custom pages.
+
 See <https://docs.readme.com/main/reference/getdoc> for more information about this API endpoint.
-
-All of the optional attributes except `body` may alternatively be set in the body's front matter. Attributes take precedence over values set in front matter.
-
-Refer to <https://docs.readme.com/main/docs/rdme> for more information about using front matter in ReadMe docs.
 
 ## Example Usage
 
@@ -64,13 +64,9 @@ resource "readme_doc" "example" {
 
 ### Optional
 
-- `body` (String) The body content of the doc, formatted in ReadMe or GitHub flavored Markdown. Accepts long page content, for example, greater than 100k characters.
-- `category` (String) **Required**. The category ID of the doc. Note that changing the category will result in a replacement of the doc resource. This attribute may optionally be set in the body front matter or with the `category_slug` attribute.
-
-Docs that specify a `parent_doc` or `parent_doc_slug` will use their parent's category.
-- `category_slug` (String) **Required**. The category ID of the doc. Note that changing the category will result in a replacement of the doc resource. This attribute may optionally be set in the body front matter with the `categorySlug` key or with the `category` attribute.
-
-Docs that specify a `parent_doc` or `parent_doc_slug` will use their parent's category.
+- `body` (String) The body content of the doc, formatted in ReadMe or GitHub flavored Markdown. Accepts long page content, for example, greater than 100k characters. Optionally use front matter to set certain attributes.
+- `category` (String) **Required**. The category ID of the doc. Note that changing the category will result in a replacement of the doc resource. Alternatively, set the `category` key the body front matter. Docs that specify a `parent_doc` or `parent_doc_slug` will use their parent's category.
+- `category_slug` (String) **Required**. The category slug of the doc. Note that changing the category will result in a replacement of the doc resource. Alternatively, set the `categorySlug` key the body front matter. Docs that specify a `parent_doc` or `parent_doc_slug` will use their parent's category.
 - `error` (Attributes) Error code configuration for a doc. This attribute may be set in the body front matter. (see [below for nested schema](#nestedatt--error))
 - `hidden` (Boolean) Toggles if a doc is hidden or not. This attribute may be set in the body front matter.
 - `order` (Number) The position of the doc in the project sidebar. This attribute may be set in the body front matter.
@@ -88,17 +84,17 @@ Docs that specify a `parent_doc` or `parent_doc_slug` will use their parent's ca
 - `body_clean` (String) The body content of the doc after transformations such as trimming leading and trailingspaces.
 - `body_html` (String) The body content in HTML.
 - `created_at` (String) Timestamp of when the version was created.
-- `deprecated` (Boolean) Toggles if a doc is deprecated or not.
+- `deprecated` (Boolean) Identifies if a doc is deprecated or not.
 - `excerpt` (String) A short summary of the content.
 - `icon` (String)
 - `id` (String) The ID of the doc.
-- `is_api` (Boolean)
-- `is_reference` (Boolean)
-- `link_external` (Boolean)
-- `link_url` (String)
-- `metadata` (Attributes) (see [below for nested schema](#nestedatt--metadata))
+- `is_api` (Boolean) Identifies if a doc is an API doc or not.
+- `is_reference` (Boolean) Identifies if a doc is a reference doc or not.
+- `link_external` (Boolean) Identifies a doc's link as external or not.
+- `link_url` (String) The URL of the doc.
+- `metadata` (Attributes) Metadata about the doc. (see [below for nested schema](#nestedatt--metadata))
 - `next` (Attributes) Information about the 'next' pages in a series. (see [below for nested schema](#nestedatt--next))
-- `previous_slug` (String)
+- `previous_slug` (String) If the doc's slug has changed, this attribute contains the previous slug.
 - `project` (String) The ID of the project the doc is in.
 - `revision` (Number) A number that is incremented upon doc updates.
 - `slug` (String) The slug of the doc.
@@ -197,9 +193,9 @@ Read-Only:
 
 Read-Only:
 
-- `description` (String)
-- `image` (List of String)
-- `title` (String)
+- `description` (String) The description of the doc.
+- `image` (List of String) An image associated with the doc.
+- `title` (String) The title of the doc.
 
 
 <a id="nestedatt--next"></a>

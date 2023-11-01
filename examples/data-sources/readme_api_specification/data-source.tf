@@ -10,3 +10,4 @@ data "readme_api_specification" "example" {
 output "api_spec_data_lookup" {
   value = data.readme_api_specification.example.title
 }
+

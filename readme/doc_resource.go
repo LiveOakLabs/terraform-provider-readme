@@ -399,11 +399,11 @@ func (r *docResource) Schema(
 ) {
 	resp.Schema = schema.Schema{
 		Description: "Manage docs on ReadMe.com\n\n" +
-			"See <https://docs.readme.com/main/reference/getdoc> for more information about this API endpoint.\n\n" +
-			"All of the optional attributes except `body` may alternatively be set in the body's front matter. " +
-			"Attributes take precedence over values set in front matter.\n\n" +
+			"Docs on ReadMe support setting some attributes using front matter. " +
+			"Resource attributes take precedence over front matter attributes in the provider.\n\n" +
 			"Refer to <https://docs.readme.com/main/docs/rdme> for more information about using front matter in " +
-			"ReadMe docs.",
+			"ReadMe docs and custom pages.\n\n" +
+			"See <https://docs.readme.com/main/reference/getdoc> for more information about this API endpoint.",
 		Attributes: map[string]schema.Attribute{
 			"algolia": schema.SingleNestedAttribute{
 				Description: "Metadata about the Algolia search integration. " +
@@ -535,7 +535,8 @@ func (r *docResource) Schema(
 			},
 			"body": schema.StringAttribute{
 				Description: "The body content of the doc, formatted in ReadMe or GitHub flavored Markdown. " +
-					"Accepts long page content, for example, greater than 100k characters.",
+					"Accepts long page content, for example, greater than 100k characters. " +
+					"Optionally use front matter to set certain attributes.",
 				Computed: true,
 				Optional: true,
 			},
@@ -550,8 +551,7 @@ func (r *docResource) Schema(
 			},
 			"category": schema.StringAttribute{
 				Description: "**Required**. The category ID of the doc. Note that changing the category will result " +
-					"in a replacement of the doc resource. This attribute may optionally be set in the body front " +
-					"matter or with the `category_slug` attribute.\n\n" +
+					"in a replacement of the doc resource. Alternatively, set the `category` key the body front matter. " +
 					"Docs that specify a `parent_doc` or `parent_doc_slug` will use their parent's category.",
 				Computed:   true,
 				Optional:   true,
@@ -561,9 +561,8 @@ func (r *docResource) Schema(
 				},
 			},
 			"category_slug": schema.StringAttribute{
-				Description: "**Required**. The category ID of the doc. Note that changing the category will result " +
-					"in a replacement of the doc resource. This attribute may optionally be set in the body front " +
-					"matter with the `categorySlug` key or with the `category` attribute.\n\n" +
+				Description: "**Required**. The category slug of the doc. Note that changing the category will result " +
+					"in a replacement of the doc resource. Alternatively, set the `categorySlug` key the body front matter. " +
 					"Docs that specify a `parent_doc` or `parent_doc_slug` will use their parent's category.",
 				Computed: true,
 				Optional: true,
@@ -579,7 +578,7 @@ func (r *docResource) Schema(
 				},
 			},
 			"deprecated": schema.BoolAttribute{
-				Description: "Toggles if a doc is deprecated or not.",
+				Description: "Identifies if a doc is deprecated or not.",
 				Computed:    true,
 			},
 			"error": schema.SingleNestedAttribute{
@@ -615,30 +614,37 @@ func (r *docResource) Schema(
 				},
 			},
 			"is_api": schema.BoolAttribute{
-				Computed: true,
+				Description: "Identifies if a doc is an API doc or not.",
+				Computed:    true,
 			},
 			"is_reference": schema.BoolAttribute{
-				Computed: true,
+				Description: "Identifies if a doc is a reference doc or not.",
+				Computed:    true,
 			},
 			"link_external": schema.BoolAttribute{
-				Computed: true,
+				Description: "Identifies a doc's link as external or not.",
+				Computed:    true,
 			},
 			"link_url": schema.StringAttribute{
-				Computed: true,
+				Description: "The URL of the doc.",
+				Computed:    true,
 			},
 			"metadata": schema.SingleNestedAttribute{
-				Computed: true,
+				Description: "Metadata about the doc.",
+				Computed:    true,
 				Attributes: map[string]schema.Attribute{
 					"description": schema.StringAttribute{
-						Computed: true,
+						Description: "The description of the doc.",
+						Computed:    true,
 					},
 					"image": schema.ListAttribute{
-						Description: "",
+						Description: "An image associated with the doc.",
 						Computed:    true,
 						ElementType: types.StringType,
 					},
 					"title": schema.StringAttribute{
-						Computed: true,
+						Description: "The title of the doc.",
+						Computed:    true,
 					},
 				},
 			},
@@ -710,7 +716,8 @@ func (r *docResource) Schema(
 				},
 			},
 			"previous_slug": schema.StringAttribute{
-				Computed: true,
+				Description: "If the doc's slug has changed, this attribute contains the previous slug.",
+				Computed:    true,
 			},
 			"project": schema.StringAttribute{
 				Description: "The ID of the project the doc is in.",

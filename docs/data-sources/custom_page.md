@@ -18,11 +18,11 @@ See <https://docs.readme.com/reference/getcustompages> for more information abou
 ```terraform
 # Retrieve a single custom page by its slug.
 data "readme_custom_page" "example" {
-    slug = "my-example-custom-page"
+  slug = "my-example-custom-page"
 }
 
 output "example" {
-    value = data.readme_custom_page.example
+  value = data.readme_custom_page.example
 }
 ```
 

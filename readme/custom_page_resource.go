@@ -218,12 +218,14 @@ func (r *customPageResource) ImportState(
 func (r *customPageResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description: "Manage custom pages on ReadMe.com\n\n" +
-			"See <https://docs.readme.com/main/reference/createcustompage> for more information about this API endpoint.\n\n" +
+			"Custom pages on ReadMe support setting some attributes using front matter. " +
+			"Resource attributes take precedence over front matter attributes in the provider.\n\n" +
 			"Refer to <https://docs.readme.com/main/docs/rdme> for more information about using front matter in " +
-			"ReadMe docs and custom pages.",
+			"ReadMe docs and custom pages.\n\n" +
+			"See <https://docs.readme.com/main/reference/createcustompage> for more information about this API endpoint.",
 		Attributes: map[string]schema.Attribute{
 			"title": schema.StringAttribute{
-				Description: "The title of the custom page. This can also be set using the `title` front matter.",
+				Description: "The title of the custom page. This can alternatively be set using the `title` front matter key.",
 				Computed:    true,
 				Optional:    true,
 				PlanModifiers: []planmodifier.String{
@@ -235,10 +237,11 @@ func (r *customPageResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Computed:    true,
 			},
 			"body": schema.StringAttribute{
-				Description: "The body of the custom page.",
-				Computed:    true,
-				Optional:    true,
-				Default:     stringdefault.StaticString(""),
+				Description: "The body of the custom page. Optionally use front matter to set certain attributes. " +
+					"Alternatively, use the `html_mode` and `html` attributes to set the body in HTML format.",
+				Computed: true,
+				Optional: true,
+				Default:  stringdefault.StaticString(""),
 			},
 			"body_clean": schema.StringAttribute{
 				Description: "The body of the custom page after normalization.",
@@ -266,7 +269,7 @@ func (r *customPageResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Computed:    true,
 			},
 			"hidden": schema.BoolAttribute{
-				Description: "Whether the custom page is hidden.",
+				Description: "Whether the custom page is hidden. This can alternatively be set using the `hidden` front matter key.",
 				Computed:    true,
 				Optional:    true,
 				Default:     booldefault.StaticBool(true),

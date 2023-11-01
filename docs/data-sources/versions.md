@@ -21,12 +21,12 @@ data "readme_versions" "example" {}
 
 # Return the full list.
 output "example_versions" {
-    value = data.readme_versions.example.versions
+  value = data.readme_versions.example.versions
 }
 
 # Retrieve a specific attribute from version in the list.
 output "example_version_detail" {
-    value = tolist(data.readme_versions.example.versions)[0].version
+  value = tolist(data.readme_versions.example.versions)[0].version
 }
 ```
 

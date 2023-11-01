@@ -20,7 +20,7 @@ See <https://docs.readme.com/main/reference/getcategories> for more information 
 data "readme_categories" "example" {}
 
 output "categories" {
-    value = data.readme_categories.example
+  value = data.readme_categories.example
 }
 ```
 
