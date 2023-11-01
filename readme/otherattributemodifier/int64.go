@@ -114,6 +114,9 @@ func (m otherInt64Changed) loadValues(
 		rDiag.Append(req.Config.GetAttribute(ctx, m.otherAttribute, &configValue)...)
 		rDiag.Append(req.Plan.GetAttribute(ctx, m.otherAttribute, &planValue)...)
 		rDiag.Append(req.Plan.GetAttribute(ctx, path.Root("body"), &bodyPlanValue)...)
+	default:
+		tflog.Error(ctx, fmt.Sprintf(
+			"otherInt64Changed: unknown request type %T", m.req))
 	}
 
 	return configValue, stateValue, planValue, bodyPlanValue, diags
@@ -215,6 +218,8 @@ func (m otherInt64Changed) PlanModifyString(
 	req planmodifier.StringRequest,
 	resp *planmodifier.StringResponse,
 ) {
+	m.req = req
+	m.resp = resp
 	m.modifyAttribute(ctx)
 }
 
@@ -226,6 +231,8 @@ func (m otherInt64Changed) PlanModifyInt64(
 	req planmodifier.Int64Request,
 	resp *planmodifier.Int64Response,
 ) {
+	m.req = req
+	m.resp = resp
 	m.modifyAttribute(ctx)
 }
 
@@ -236,5 +243,7 @@ func (m otherInt64Changed) PlanModifyBool(
 	req planmodifier.BoolRequest,
 	resp *planmodifier.BoolResponse,
 ) {
+	m.req = req
+	m.resp = resp
 	m.modifyAttribute(ctx)
 }

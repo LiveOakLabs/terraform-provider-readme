@@ -654,6 +654,441 @@ func TestDocResource_FrontMatter(t *testing.T) {
 	}
 }
 
+// Test changing the 'hidden' attribute in the doc resource (not front matter).
+func TestDocResource_Hidden_Attribute_Changes(t *testing.T) {
+	// Close all gocks after completion.
+	defer gock.OffAll()
+
+	expectedDoc := mockDoc
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Create doc with hidden initially unset.
+			{
+				Config: providerConfig + fmt.Sprintf(`
+					resource "readme_doc" "test" {
+						title    = "%s"
+						body     = "body"
+						category = "%s"
+						type     = "%s"
+					}`,
+					expectedDoc.Title, expectedDoc.Category, expectedDoc.Type,
+				),
+				PreConfig: func() {
+					expectedDoc.Body = "body"
+					expectedDoc.Hidden = false // ReadMe API default.
+
+					docCommonGocks()
+					gock.New(testURL).Post("/docs").Times(1).Reply(201).JSON(expectedDoc)
+					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(2).Reply(200).JSON(expectedDoc)
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"readme_doc.test",
+						"hidden",
+						"false",
+					),
+				),
+			},
+			// Change the 'hidden' attribute to true.
+			{
+				Config: providerConfig + fmt.Sprintf(`
+					resource "readme_doc" "test" {
+						title    = "%s"
+					  body     = "body"
+						category = "%s"
+						hidden   = true
+						type     = "%s"
+					}`,
+					expectedDoc.Title, expectedDoc.Category, expectedDoc.Type,
+				),
+				PreConfig: func() {
+					expectedDoc.Body = "body"
+					expectedDoc.Hidden = true
+
+					docCommonGocks()
+					gock.New(testURL).Put("/docs/" + expectedDoc.Slug).Times(1).Reply(200).JSON(expectedDoc)
+					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(3).Reply(200).JSON(expectedDoc)
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"readme_doc.test",
+						"hidden",
+						"true",
+					),
+				),
+			},
+			// Change to setting the 'hidden' attribute in front matter.
+			{
+				Config: providerConfig + fmt.Sprintf(`
+					resource "readme_doc" "test" {
+						title    = "%s"
+					  body     = "---\nhidden: false\n---\nbody"
+						category = "%s"
+						type     = "%s"
+					}`,
+					expectedDoc.Title, expectedDoc.Category, expectedDoc.Type,
+				),
+				PreConfig: func() {
+					expectedDoc.Body = `---\nhidden: false\n---\nbody`
+					expectedDoc.Hidden = false
+
+					docCommonGocks()
+					gock.New(testURL).Put("/docs/" + expectedDoc.Slug).Times(1).Reply(200).JSON(expectedDoc)
+					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(3).Reply(200).JSON(expectedDoc)
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"readme_doc.test",
+						"hidden",
+						"false",
+					),
+				),
+			},
+			// Change back to setting 'hidden' on the resource.
+			{
+				Config: providerConfig + fmt.Sprintf(`
+					resource "readme_doc" "test" {
+						title    = "%s"
+					  body     = "body"
+						category = "%s"
+						hidden   = true
+						type     = "%s"
+					}`,
+					expectedDoc.Title, expectedDoc.Category, expectedDoc.Type,
+				),
+				PreConfig: func() {
+					expectedDoc.Body = "body"
+					expectedDoc.Hidden = true
+
+					docCommonGocks()
+					gock.New(testURL).Put("/docs/" + expectedDoc.Slug).Times(1).Reply(200).JSON(expectedDoc)
+					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(3).Reply(200).JSON(expectedDoc)
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"readme_doc.test",
+						"hidden",
+						"true",
+					),
+				),
+			},
+			// Change 'hidden' to false.
+			{
+				Config: providerConfig + fmt.Sprintf(`
+					resource "readme_doc" "test" {
+						title    = "%s"
+					  body     = "body"
+						category = "%s"
+						hidden   = false
+						type     = "%s"
+					}`,
+					expectedDoc.Title, expectedDoc.Category, expectedDoc.Type,
+				),
+				PreConfig: func() {
+					expectedDoc.Body = "body"
+					expectedDoc.Hidden = false
+
+					docCommonGocks()
+					gock.New(testURL).Put("/docs/" + expectedDoc.Slug).Times(1).Reply(200).JSON(expectedDoc)
+					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(3).Reply(200).JSON(expectedDoc)
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"readme_doc.test",
+						"hidden",
+						"false",
+					),
+				),
+			},
+			// Remove the 'hidden' attribute. It remains unchanged.
+			{
+				Config: providerConfig + fmt.Sprintf(`
+					resource "readme_doc" "test" {
+						title    = "%s"
+					  body     = "body"
+						category = "%s"
+						type     = "%s"
+					}`,
+					expectedDoc.Title, expectedDoc.Category, expectedDoc.Type,
+				),
+				PreConfig: func() {
+					expectedDoc.Body = "body"
+					expectedDoc.Hidden = false
+
+					docCommonGocks()
+					gock.New(testURL).Put("/docs/" + expectedDoc.Slug).Times(1).Reply(200).JSON(expectedDoc)
+					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(3).Reply(200).JSON(expectedDoc)
+
+					// Test cleanup.
+					gock.New(testURL).Delete("/docs/" + expectedDoc.Slug).Times(1).Reply(204)
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"readme_doc.test",
+						"hidden",
+						"false",
+					),
+				),
+			},
+		},
+	})
+}
+
+// Test changing the 'order' attribute in the doc resource (not front matter).
+func TestDocResource_Order_Attribute_Changes(t *testing.T) {
+	// Close all gocks after completion.
+	defer gock.OffAll()
+
+	expectedDoc := mockDoc
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Create doc with order set.
+			{
+				Config: providerConfig + fmt.Sprintf(`
+					resource "readme_doc" "test" {
+						title    = "%s"
+						body     = "%s"
+						category = "%s"
+						order    = 1
+						type     = "%s"
+					}`,
+					expectedDoc.Title, expectedDoc.Body, expectedDoc.Category, expectedDoc.Type,
+				),
+				PreConfig: func() {
+					expectedDoc.Order = 1
+
+					docCommonGocks()
+					gock.New(testURL).Post("/docs").Times(1).Reply(201).JSON(expectedDoc)
+					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(2).Reply(200).JSON(expectedDoc)
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"readme_doc.test",
+						"order",
+						"1",
+					),
+				),
+			},
+			// Change the order attribute.
+			{
+				Config: providerConfig + fmt.Sprintf(`
+					resource "readme_doc" "test" {
+						title    = "%s"
+					  body     = "%s"
+						category = "%s"
+						order    = 2
+						type     = "%s"
+					}`,
+					expectedDoc.Title, expectedDoc.Body, expectedDoc.Category, expectedDoc.Type,
+				),
+				PreConfig: func() {
+					expectedDoc.Order = 2
+
+					docCommonGocks()
+					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(3).Reply(200).JSON(expectedDoc)
+					gock.New(testURL).Put("/docs/" + expectedDoc.Slug).Times(1).Reply(200).JSON(expectedDoc)
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"readme_doc.test",
+						"order",
+						"2",
+					),
+				),
+			},
+			// Change to setting order in front matter.
+			{
+				Config: providerConfig + fmt.Sprintf(`
+					resource "readme_doc" "test" {
+						title    = "%s"
+					  body     = "---\norder: 3\n---\nbody"
+						category = "%s"
+						type     = "%s"
+					}`,
+					expectedDoc.Title, expectedDoc.Category, expectedDoc.Type,
+				),
+				PreConfig: func() {
+					expectedDoc.Body = `---\norder: 3\n---\nbody`
+					expectedDoc.Order = 3
+
+					docCommonGocks()
+					gock.New(testURL).Put("/docs/" + expectedDoc.Slug).Times(1).Reply(200).JSON(expectedDoc)
+					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(3).Reply(200).JSON(expectedDoc)
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"readme_doc.test",
+						"order",
+						"3",
+					),
+				),
+			},
+			// Change back to setting order in the resource.
+			{
+				Config: providerConfig + fmt.Sprintf(`
+					resource "readme_doc" "test" {
+						title    = "%s"
+					  body     = "%s"
+						category = "%s"
+						order    = 4
+						type     = "%s"
+					}`,
+					expectedDoc.Title, expectedDoc.Body, expectedDoc.Category, expectedDoc.Type,
+				),
+				PreConfig: func() {
+					expectedDoc.Body = mockDoc.Body
+					expectedDoc.Order = 4
+
+					docCommonGocks()
+					gock.New(testURL).Put("/docs/" + expectedDoc.Slug).Times(1).Reply(200).JSON(expectedDoc)
+					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(3).Reply(200).JSON(expectedDoc)
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"readme_doc.test",
+						"order",
+						"4",
+					),
+				),
+			},
+			// Remove the order attribute. It is left unchanged.
+			{
+				Config: providerConfig + fmt.Sprintf(`
+					resource "readme_doc" "test" {
+						title    = "%s"
+					  body     = "%s"
+						category = "%s"
+						type     = "%s"
+					}`,
+					expectedDoc.Title, expectedDoc.Body, expectedDoc.Category, expectedDoc.Type,
+				),
+				PreConfig: func() {
+					expectedDoc.Order = 4
+
+					docCommonGocks()
+					gock.New(testURL).Put("/docs/" + expectedDoc.Slug).Times(1).Reply(200).JSON(expectedDoc)
+					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(3).Reply(200).JSON(expectedDoc)
+
+					// Post-test deletion
+					gock.New(testURL).Delete("/docs/" + expectedDoc.Slug).Times(1).Reply(204)
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"readme_doc.test",
+						"order",
+						"4",
+					),
+				),
+			},
+		},
+	})
+}
+
+// Test changing the 'order' attribute in the doc front matter.
+func TestDocResource_Order_FrontMatter_Changes(t *testing.T) {
+	// Close all gocks after completion.
+	defer gock.OffAll()
+
+	expectedDoc := mockDoc
+	expectedDoc.Body = `---\norder: 1\n---\nbody`
+	expectedDoc.Order = 1
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Create doc with order set in front matter.
+			{
+				Config: providerConfig + fmt.Sprintf(`
+					resource "readme_doc" "test" {
+						title    = "%s"
+						body     = "%s"
+						category = "%s"
+						type     = "%s"
+					}`,
+					expectedDoc.Title, expectedDoc.Body, expectedDoc.Category, expectedDoc.Type,
+				),
+				PreConfig: func() {
+					docCommonGocks()
+					gock.New(testURL).Post("/docs").Times(1).Reply(201).JSON(expectedDoc)
+					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(2).Reply(200).JSON(expectedDoc)
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"readme_doc.test",
+						"order",
+						"1",
+					),
+				),
+			},
+			// Change the order attribute in front matter.
+			{
+				Config: providerConfig + fmt.Sprintf(`
+					resource "readme_doc" "test" {
+						title    = "%s"
+						#body     = "%s"
+					  body = "---\norder: 2\n---\nbody"
+						category = "%s"
+						type     = "%s"
+					}`,
+					expectedDoc.Title, expectedDoc.Body, expectedDoc.Category, expectedDoc.Type,
+				),
+				PreConfig: func() {
+					expectedDoc.Body = `---\norder: 2\n---\nbody`
+					expectedDoc.Order = 2
+
+					docCommonGocks()
+					gock.New(testURL).Put("/docs/" + expectedDoc.Slug).Times(1).Reply(200).JSON(expectedDoc)
+					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(3).Reply(200).JSON(expectedDoc)
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"readme_doc.test",
+						"order",
+						"2",
+					),
+				),
+			},
+			// Remove the order attribute.
+			{
+				Config: providerConfig + fmt.Sprintf(`
+					resource "readme_doc" "test" {
+						title    = "%s"
+					  body     = "body"
+						category = "%s"
+						type     = "%s"
+					}`,
+					expectedDoc.Title, expectedDoc.Category, expectedDoc.Type,
+				),
+				PreConfig: func() {
+					expectedDoc.Body = `body`
+					expectedDoc.Order = 999
+
+					docCommonGocks()
+					gock.New(testURL).Put("/docs/" + expectedDoc.Slug).Times(1).Reply(200).JSON(expectedDoc)
+					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(3).Reply(200).JSON(expectedDoc)
+
+					// Post-test deletion
+					gock.New(testURL).Delete("/docs/" + expectedDoc.Slug).Times(1).Reply(204)
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"readme_doc.test",
+						"order",
+						"999",
+					),
+				),
+			},
+		},
+	})
+}
+
 // TestDocRenamedSlugResource tests that a doc can be created and continue to
 // be managed by Terraform when the slug is changed outside of Terraform by
 // using the "get_slug" attribute.

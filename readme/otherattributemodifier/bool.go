@@ -161,13 +161,14 @@ func (m otherBoolChanged) modifyAttribute(ctx context.Context) {
 
 		// If the value from frontmatter is not empty, compare it to the current state.
 		if value != (reflect.Value{}) {
+			fmValue := value.Interface().(*bool)
 			tflog.Debug(ctx, fmt.Sprintf(
-				"%s was found in frontmatter with value %s",
-				m.otherAttribute, value))
+				"%s was found in frontmatter with value %v",
+				m.otherAttribute, *fmValue))
 
 			// If the value from frontmatter is different from the current
 			// plan, mark this attribute as changed.
-			isChanged = value.Interface().(bool) != otherPlanValue.ValueBool()
+			isChanged = *fmValue != otherPlanValue.ValueBool()
 		} else {
 			tflog.Debug(ctx, fmt.Sprintf(
 				"value for %s was not found in frontmatter",
@@ -233,6 +234,8 @@ func (m otherBoolChanged) PlanModifyString(
 	req planmodifier.StringRequest,
 	resp *planmodifier.StringResponse,
 ) {
+	m.req = req
+	m.resp = resp
 	m.modifyAttribute(ctx)
 }
 
@@ -244,6 +247,8 @@ func (m otherBoolChanged) PlanModifyInt64(
 	req planmodifier.Int64Request,
 	resp *planmodifier.Int64Response,
 ) {
+	m.req = req
+	m.resp = resp
 	m.modifyAttribute(ctx)
 }
 
@@ -254,5 +259,7 @@ func (m otherBoolChanged) PlanModifyBool(
 	req planmodifier.BoolRequest,
 	resp *planmodifier.BoolResponse,
 ) {
+	m.req = req
+	m.resp = resp
 	m.modifyAttribute(ctx)
 }
