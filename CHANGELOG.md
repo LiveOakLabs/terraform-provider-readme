@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.17 - 2023-11-08
+
+### Changes
+
+- Update client to 0.1.3 for spec version bugfix @joshbeard (#84)
+
 ## v0.1.12 - 2023-04-18
 
 ### 🚀 Features
