@@ -145,6 +145,10 @@ func (r *docResource) Create(
 	req resource.CreateRequest,
 	resp *resource.CreateResponse,
 ) {
+	var err error
+	var doc readme.Doc
+	var apiResponse *readme.APIResponse
+
 	// Retrieve values from plan.
 	var state, plan docModel
 	diags := req.Plan.Get(ctx, &plan)
@@ -166,22 +170,38 @@ func (r *docResource) Create(
 		}
 	}
 
-	// Create the doc.
-	response, apiResponse, err := r.client.Doc.Create(docPlanToParams(ctx, plan), requestOpts)
-	if err != nil {
-		resp.Diagnostics.AddError("Unable to create doc.", clientError(err, apiResponse))
+	if plan.UseSlug.IsNull() {
+		// Create the doc.
+		doc, apiResponse, err = r.client.Doc.Create(docPlanToParams(ctx, plan), requestOpts)
+		if err != nil {
+			resp.Diagnostics.AddError("Unable to create doc.", clientError(err, apiResponse))
 
-		return
+			return
+		}
+	} else {
+		// Adopt the doc.
+		adopted, err := r.adoptDoc(ctx, plan, requestOpts)
+		if err != nil {
+			resp.Diagnostics.AddError("Unable to create doc.", err.Error())
+
+			return
+		}
+		if adopted == nil {
+			resp.Diagnostics.AddError("Unable to create doc.", "adopted doc is nil")
+
+			return
+		}
+		doc = *adopted
 	}
 
 	// Get the doc.
-	state, _, err = getDoc(r.client, ctx, response.Slug, plan, requestOpts)
+	state, _, err = getDoc(r.client, ctx, doc.Slug, plan, requestOpts)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to create doc.",
 			fmt.Sprintf(
 				"There was a problem retrieving the doc '%s' after creation: %s.",
-				response.Slug,
+				doc.Slug,
 				err.Error(),
 			),
 		)
@@ -198,6 +218,34 @@ func (r *docResource) Create(
 
 		return
 	}
+}
+
+// adoptDoc attempts to retrieve a doc by its slug and update it with the plan attributes.
+// This is used when the `use_slug` attribute is set to assume management of an existing doc.
+func (r *docResource) adoptDoc(
+	ctx context.Context,
+	plan docModel,
+	requestOpts readme.RequestOptions,
+) (*readme.Doc, error) {
+	slug := plan.UseSlug.ValueString()
+	tflog.Info(ctx, fmt.Sprintf("using slug %s", slug))
+	existing, _, err := getDoc(r.client, ctx, slug, plan, requestOpts)
+	if err != nil {
+		return nil, fmt.Errorf("error retrieving doc %s: %w", slug, err)
+	}
+
+	if existing.Slug.ValueString() == "" {
+		return nil, fmt.Errorf("doc %s not found", slug)
+	}
+
+	// Update the existing doc.
+	tflog.Info(ctx, fmt.Sprintf("updating doc %s", slug))
+	doc, _, err := r.client.Doc.Update(slug, docPlanToParams(ctx, plan), requestOpts)
+	if err != nil {
+		return nil, fmt.Errorf("error updating doc %s: %w", slug, err)
+	}
+
+	return &doc, nil
 }
 
 // Read refreshes the Terraform state with the latest data.
@@ -220,6 +268,11 @@ func (r *docResource) Read(
 
 	slug := state.Slug.ValueString()
 	stateID := state.ID.ValueString()
+
+	if state.UseSlug.ValueString() != "" {
+		tflog.Info(ctx, fmt.Sprintf("use_slug is set to %s.", state.UseSlug.ValueString()))
+		slug = state.UseSlug.ValueString()
+	}
 
 	// Get the doc.
 	state, apiResponse, err := getDoc(r.client, ctx, slug, state, requestOpts)
@@ -291,10 +344,16 @@ func (r *docResource) Update(
 			return
 		}
 	}
+	slug := state.Slug.ValueString()
+
+	if state.UseSlug.ValueString() != "" {
+		tflog.Info(ctx, fmt.Sprintf("use_slug is set to %s.", state.UseSlug.ValueString()))
+		slug = state.UseSlug.ValueString()
+	}
 
 	// Update the doc.
 	params := docPlanToParams(ctx, plan)
-	response, apiResponse, err := r.client.Doc.Update(state.Slug.ValueString(), params, requestOpts)
+	response, apiResponse, err := r.client.Doc.Update(slug, params, requestOpts)
 	if err != nil {
 		resp.Diagnostics.AddError("Unable to update doc.", clientError(err, apiResponse))
 
@@ -333,6 +392,13 @@ func (r *docResource) Delete(
 	var state docModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if !state.UseSlug.IsNull() {
+		tflog.Info(ctx, fmt.Sprintf("use_slug is set to %s. Doc will not be "+
+			"deleted remotely but will be removed from state.", state.UseSlug.ValueString()))
+		resp.State.RemoveResource(ctx)
 		return
 	}
 
@@ -796,6 +862,24 @@ func (r *docResource) Schema(
 					// the post-apply diff. This effectively triggers it to
 					// refresh whenever the document is updated.
 					otherattributemodifier.StringModifyString(path.Root("updated_at"), "UpdatedAt", true),
+				},
+			},
+			"use_slug": schema.StringAttribute{
+				Description: "**Use with caution!** Create the doc resource by importing an existing doc by its slug. " +
+					"This is non-conventional and should only be used when the slug is known and " +
+					"the doc is not managed by Terraform. " +
+					"This is useful for managing an API specification's doc that gets created " +
+					"automatically by ReadMe. When set, the specified doc will be replaced " +
+					"with the Terraform-managed doc. Changing the value will trigger a re-creation of the doc. " +
+					"If this is set and then unset, a new doc will be created but the existing doc will not be " +
+					"deleted. The existing doc will be orphaned and will not be managed by Terraform. " +
+					"If this is unset and then set, the existing doc will be deleted and the resource will be " +
+					"pointed to the specified doc. " +
+					"In the case of API specification docs, the doc is implicitly deleted when the " +
+					"API specification is deleted.",
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"version": schema.StringAttribute{

@@ -46,6 +46,7 @@ dist/
 
 # Exclude test reports
 checkstyle-report.xml
+coverage.html
 coverage.xml
 coverage.txt
 
