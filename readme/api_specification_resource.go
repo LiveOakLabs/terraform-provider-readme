@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/liveoaklabs/readme-api-go-client/readme"
 )
 
@@ -141,6 +142,11 @@ func (r *apiSpecificationResource) Schema(
 			"specification with its definition. When importing, Terraform will replace the remote definition on its " +
 			"next run, regardless if it differs from the local definition. This will associate a registry UUID " +
 			"with the specification.\n\n" +
+			"## Managing API Specification Docs\n\n" +
+			"API Specifications created in ReadMe can have a documentation page associated with them. This is " +
+			"automatically created by ReadMe when a specification is created. The documentation page is not " +
+			"implicitly managed by Terraform. To manage the documentation page, use the `readme_doc` resource " +
+			"with the `use_slug` attribute set to the API specification tag slug.\n\n" +
 			"See <https://docs.readme.com/main/reference/uploadapispecification> for more information about this API " +
 			"endpoint.",
 		Attributes: map[string]schema.Attribute{
@@ -234,7 +240,7 @@ func (r *apiSpecificationResource) Create(
 	}
 
 	// Create the specification.
-	plan, err := r.save("create", "", plan)
+	plan, err := r.save(ctx, saveActionCreate, "", plan)
 	if err != nil {
 		resp.Diagnostics.AddError("Unable to create API specification.", err.Error())
 
@@ -297,6 +303,7 @@ func (r *apiSpecificationResource) Read(
 
 	// Get the spec plan.
 	state, err := r.makePlan(
+		ctx,
 		state.ID.ValueString(),
 		currentDefinition,
 		state.UUID.ValueString(),
@@ -304,6 +311,7 @@ func (r *apiSpecificationResource) Read(
 	)
 	if err != nil {
 		if strings.Contains(err.Error(), "API specification not found") {
+			tflog.Warn(ctx, fmt.Sprintf("API specification %s not found. Removing from state.", state.ID.ValueString()))
 			resp.State.RemoveResource(ctx)
 
 			return
@@ -349,7 +357,7 @@ func (r *apiSpecificationResource) Update(
 	}
 
 	// Create the specification.
-	plan, err := r.save("update", state.ID.ValueString(), plan)
+	plan, err := r.save(ctx, saveActionUpdate, state.ID.ValueString(), plan)
 	if err != nil {
 		resp.Diagnostics.AddError("Unable to update API specification.", err.Error())
 
@@ -429,7 +437,9 @@ func (r *apiSpecificationResource) ImportState(
 // After creation or update, the specification is retrieved and `makePlan()` is called to map the results to the
 // Terraform resource schema that is returned.
 func (r *apiSpecificationResource) save(
-	action, specID string, plan apiSpecificationResourceModel,
+	ctx context.Context,
+	action saveAction,
+	specID string, plan apiSpecificationResourceModel,
 ) (apiSpecificationResourceModel, error) {
 	var registry readme.APIRegistrySaved
 	var response readme.APISpecificationSaved
@@ -449,7 +459,7 @@ func (r *apiSpecificationResource) save(
 
 	// Create or update an API specification associated with the API registry.
 	requestOptions := readme.RequestOptions{Version: version}
-	if action == "update" {
+	if action == saveActionUpdate {
 		response, apiResponse, err = r.client.APISpecification.Update(
 			specID,
 			UUIDPrefix+registry.RegistryUUID,
@@ -481,7 +491,7 @@ func (r *apiSpecificationResource) save(
 	deleteCategory := plan.DeleteCategory
 
 	// Get the spec plan.
-	plan, err = r.makePlan(response.ID, plan.Definition, registry.RegistryUUID, version)
+	plan, err = r.makePlan(ctx, response.ID, plan.Definition, registry.RegistryUUID, version)
 	if err != nil {
 		return apiSpecificationResourceModel{}, fmt.Errorf("unable to make plan: %+w", err)
 	}
@@ -495,9 +505,9 @@ func (r *apiSpecificationResource) save(
 //
 // If a version ID is provided instead of a semver, a call to the version API is
 // made to determine the semver.
-//
 // `get()` is called to retrieve the remote specification that is mapped to the schema that is returned.
 func (r *apiSpecificationResource) makePlan(
+	ctx context.Context,
 	specID string,
 	definition types.String,
 	registryUUID, version string,
@@ -512,7 +522,7 @@ func (r *apiSpecificationResource) makePlan(
 	}
 
 	// Retrieve metadata about the API specification.
-	spec, err := r.get(specID, version)
+	spec, err := r.get(ctx, specID, version)
 	if err != nil {
 		return apiSpecificationResourceModel{}, fmt.Errorf("error getting specification: %w", err)
 	}
@@ -534,12 +544,13 @@ func (r *apiSpecificationResource) makePlan(
 }
 
 // get is a helper function that retrieves a specification by ID and returns a readme.APISpecification struct.
-func (r *apiSpecificationResource) get(specID, version string) (readme.APISpecification, error) {
+func (r *apiSpecificationResource) get(ctx context.Context, specID, version string) (readme.APISpecification, error) {
 	requestOptions := readme.RequestOptions{Version: version}
-	specification, apiResponse, err := r.client.APISpecification.Get(specID, requestOptions)
+	specification, _, err := r.client.APISpecification.Get(specID, requestOptions)
 	if err != nil {
-		// return specification, errors.New(clientError(err, apiResponse))
-		return specification, fmt.Errorf("unable to get specification id %s: %s", specID, string(apiResponse.Body))
+		tflog.Error(ctx, fmt.Sprintf("Unable to get specification: %+v", err))
+
+		return specification, fmt.Errorf("unable to get specification id %s: %w", specID, err)
 	}
 
 	if specification.ID == "" {

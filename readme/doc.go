@@ -47,6 +47,7 @@ type docModel struct {
 	Type            types.String `tfsdk:"type"`
 	UpdatedAt       types.String `tfsdk:"updated_at"`
 	User            types.String `tfsdk:"user"`
+	UseSlug         types.String `tfsdk:"use_slug"`
 	VerifyParentDoc types.Bool   `tfsdk:"verify_parent_doc"`
 	Version         types.String `tfsdk:"version"`
 	VersionID       types.String `tfsdk:"version_id"`
@@ -107,6 +108,7 @@ func docModelValue(ctx context.Context, doc readme.Doc, model docModel) docModel
 		Type:            types.StringValue(doc.Type),
 		UpdatedAt:       types.StringValue(doc.UpdatedAt),
 		User:            types.StringValue(doc.User),
+		UseSlug:         model.UseSlug,
 		VerifyParentDoc: model.VerifyParentDoc,
 		Version:         model.Version,
 		VersionID:       types.StringValue(doc.Version),

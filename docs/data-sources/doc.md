@@ -68,6 +68,7 @@ output "example_doc" {
 - `title` (String) The title of the doc.
 - `type` (String) Type of the doc. The available types all show up under the /docs/ URL path of your docs project (also known as the "guides" section). Can be "basic" (most common), "error" (page desribing an API error), or "link" (page that redirects to an external link).
 - `updated_at` (String) The timestamp of when the doc was last updated.
+- `use_slug` (String) This is an unused attribute in the data source that is present to satisfy the model shared with the doc resource. It may be removed in the future.
 - `user` (String) The ID of the author of the doc in the web editor.
 - `version_id` (String) The version ID the doc is associated with.
 

@@ -9,6 +9,8 @@ description: |-
   External changes made to an API specification managed by Terraform will not be detected due to the way the API registry works. When a specification definition is updated, the registry UUID changes and is only available from the response when the definition is published to the registry. When Terraform runs after an external update, there's no way of programatically retrieving the current state without the current UUID. Forcing a Terraform update (e.g. tainting or a manual change) will get things synchronized again.
   Importing Existing Specifications
   Importing API specifications is limited due to the behavior of the API registry and associating a specification with its definition. When importing, Terraform will replace the remote definition on its next run, regardless if it differs from the local definition. This will associate a registry UUID with the specification.
+  Managing API Specification Docs
+  API Specifications created in ReadMe can have a documentation page associated with them. This is automatically created by ReadMe when a specification is created. The documentation page is not implicitly managed by Terraform. To manage the documentation page, use the readme_doc resource with the use_slug attribute set to the API specification tag slug.
   See https://docs.readme.com/main/reference/uploadapispecification for more information about this API endpoint.
 ---
 
@@ -25,6 +27,10 @@ External changes made to an API specification managed by Terraform will not be d
 ## Importing Existing Specifications
 
 Importing API specifications is limited due to the behavior of the API registry and associating a specification with its definition. When importing, Terraform will replace the remote definition on its next run, regardless if it differs from the local definition. This will associate a registry UUID with the specification.
+
+## Managing API Specification Docs
+
+API Specifications created in ReadMe can have a documentation page associated with them. This is automatically created by ReadMe when a specification is created. The documentation page is not implicitly managed by Terraform. To manage the documentation page, use the `readme_doc` resource with the `use_slug` attribute set to the API specification tag slug.
 
 See <https://docs.readme.com/main/reference/uploadapispecification> for more information about this API endpoint.
 
@@ -48,8 +54,27 @@ output "created_spec_id" {
 }
 
 # Output the specification JSON of the created resource.
-output "created_spec_json" {
-  value = readme_api_specification.example.definition
+# output "created_spec_json" {
+#   value = readme_api_specification.example.definition
+# }
+
+# ---------------------------------------------------------------------------
+# Example of associating a doc resource with the API specification's default
+# doc that is automatically created.
+resource "readme_doc" "example" {
+  # This will be the visible name of the API specification's default doc.
+  title = "store"
+
+  # Use the API specification's category ID.
+  category = readme_api_specification.example.category.id
+
+  # Specify the slug of the created API spec doc. This is the slug of a
+  # specification tag.
+  use_slug = "store"
+
+  order = 10
+  type  = "basic"
+  body  = "This is the Pet Store API specification's default doc."
 }
 ```
 

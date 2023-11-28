@@ -376,6 +376,15 @@ func (d *docDataSource) Schema(
 				Description: "The ID of the author of the doc in the web editor.",
 				Computed:    true,
 			},
+			// This isn't used by the doc data source, but must be present because the struct
+			// is shared with the doc resource, which does use it.
+			// In the future, we may want to split the struct into separate types for the
+			// resource and data source.
+			"use_slug": schema.StringAttribute{
+				Description: "This is an unused attribute in the data source that is present to " +
+					"satisfy the model shared with the doc resource. It may be removed in the future.",
+				Computed: true,
+			},
 			"verify_parent_doc": schema.BoolAttribute{
 				Description: "Enables or disables the provider verifying the `parent_doc` exists. When using the " +
 					"`parent_doc` attribute with a hidden parent, the provider is unable to verify if the parent " +

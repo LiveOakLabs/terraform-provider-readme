@@ -48,6 +48,15 @@ type readmeProviderModel struct {
 	APIURL   types.String `tfsdk:"api_url"`
 }
 
+// saveAction is a custom type to represent the action to take when saving a
+// resource.
+type saveAction string
+
+const (
+	saveActionCreate saveAction = "create"
+	saveActionUpdate saveAction = "update"
+)
+
 // Metadata returns the provider type name.
 func (p *readmeProvider) Metadata(
 	_ context.Context,
