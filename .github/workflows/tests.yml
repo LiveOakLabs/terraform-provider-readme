@@ -78,7 +78,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # list whatever Terraform versions here you would like to support
+        # list of Terraform versions to test against.
         terraform:
           - '1.0.*'
           - '1.1.*'
@@ -86,6 +86,7 @@ jobs:
           - '1.3.*'
           - '1.4.*'
           - '1.5.*'
+          - '1.6.*'
     steps:
       - uses: actions/checkout@v4 # v3.3.0
       - uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
