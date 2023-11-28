@@ -654,6 +654,74 @@ func TestDocResource_FrontMatter(t *testing.T) {
 	}
 }
 
+// Test when the 'user' value changes between the apply and post-apply refresh.
+func TestDocResource_User_Attribute_Changes(t *testing.T) {
+	// Close all gocks after completion.
+	defer gock.OffAll()
+
+	expectedDoc := mockDoc
+
+	updatedDoc := mockDoc
+	updatedDoc.User = "updated-user"
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: providerConfig + fmt.Sprintf(`
+					resource "readme_doc" "test" {
+						title    = "%s"
+						body     = "body"
+						category = "%s"
+						type     = "%s"
+					}`,
+					expectedDoc.Title, expectedDoc.Category, expectedDoc.Type,
+				),
+				PreConfig: func() {
+					docCommonGocks()
+					gock.New(testURL).Post("/docs").Times(1).Reply(201).JSON(expectedDoc)
+					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(2).Reply(200).JSON(expectedDoc)
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"readme_doc.test",
+						"user",
+						expectedDoc.User,
+					),
+				),
+			},
+			{
+				Config: providerConfig + fmt.Sprintf(`
+					resource "readme_doc" "test" {
+						title    = "%s"
+						body     = "updated body"
+						category = "%s"
+						type     = "%s"
+					}`,
+					updatedDoc.Title, updatedDoc.Category, updatedDoc.Type,
+				),
+				PreConfig: func() {
+					docCommonGocks()
+					// First request responds with the original user.
+					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(1).Reply(200).JSON(expectedDoc)
+					gock.New(testURL).Put("/docs").Times(1).Reply(200).JSON(updatedDoc)
+					// Post-update request has the updated user.
+					gock.New(testURL).Get("/docs/" + updatedDoc.Slug).Times(2).Reply(200).JSON(updatedDoc)
+					gock.New(testURL).Delete("/docs/" + updatedDoc.Slug).Times(1).Reply(204)
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"readme_doc.test",
+						"user",
+						updatedDoc.User,
+					),
+				),
+			},
+		},
+	})
+}
+
 // Test changing the 'hidden' attribute in the doc resource (not front matter).
 func TestDocResource_Hidden_Attribute_Changes(t *testing.T) {
 	// Close all gocks after completion.

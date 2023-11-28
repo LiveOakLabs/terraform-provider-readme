@@ -791,6 +791,12 @@ func (r *docResource) Schema(
 			"user": schema.StringAttribute{
 				Description: "The ID of the author of the doc in the web editor.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					// The user attribute is volatile and may show changes in
+					// the post-apply diff. This effectively triggers it to
+					// refresh whenever the document is updated.
+					otherattributemodifier.StringModifyString(path.Root("updated_at"), "UpdatedAt", true),
+				},
 			},
 			"version": schema.StringAttribute{
 				Description: "The version to create the doc under.",
