@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.2.1 - 2023-12-04
+
+### Bug Fixes
+
+- fix: api spec response error @joshbeard (#90)
+
 ## v0.2.0 - 2023-12-04
 
 ### Features
