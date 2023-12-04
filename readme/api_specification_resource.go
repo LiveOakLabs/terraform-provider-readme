@@ -478,7 +478,7 @@ func (r *apiSpecificationResource) save(
 		}
 
 		return apiSpecificationResourceModel{},
-			fmt.Errorf("unable to save: (%d) %+v", status, apiResponse.APIErrorResponse)
+			fmt.Errorf("unable to save: (%d) %w", status, err)
 	}
 
 	if response.ID == "" {
