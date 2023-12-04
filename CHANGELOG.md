@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.2.0 - 2023-12-04
+
+### Features
+
+- feat: ability to associate doc with slug @joshbeard (#88)
+
+### Bug Fixes
+
+- fix: volatile 'user' attribute on docs @joshbeard (#87)
+
+### Maintenance
+
+- ci: test against Terraform 1.6 @joshbeard (#89)
+- build(deps): bump github.com/hashicorp/terraform-plugin-go from 0.19.0 to 0.19.1 @dependabot (#86)
+- build(deps): bump github.com/hashicorp/terraform-plugin-sdk/v2 from 2.29.0 to 2.30.0 @dependabot (#85)
+
 ## v0.1.17 - 2023-11-08
 
 ### Changes
