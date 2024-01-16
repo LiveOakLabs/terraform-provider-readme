@@ -6,10 +6,13 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -18,7 +21,6 @@ import (
 
 	"github.com/liveoaklabs/readme-api-go-client/readme"
 	"github.com/liveoaklabs/terraform-provider-readme/readme/frontmatter"
-	"github.com/liveoaklabs/terraform-provider-readme/readme/otherattributemodifier"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -112,10 +114,80 @@ func (r docResource) ValidateConfig(
 	}
 }
 
+func (r *docResource) ModifyPlan(
+	ctx context.Context,
+	req resource.ModifyPlanRequest,
+	resp *resource.ModifyPlanResponse,
+) {
+	plan := &docModel{}
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+
+	state := &docModel{}
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+
+	if resp.Diagnostics.HasError() || plan == nil {
+		return
+	}
+
+	if state == nil {
+		plan.BodyClean = types.StringUnknown()
+		plan.BodyHTML = types.StringUnknown()
+		plan.Revision = types.Int64Unknown()
+		plan.UpdatedAt = types.StringUnknown()
+		plan.User = types.StringUnknown()
+		diags := resp.Plan.Set(ctx, plan)
+		resp.Diagnostics.Append(diags...)
+
+		return
+	}
+
+	body := strings.TrimSpace(plan.Body.ValueString())
+
+	// Expand newline escape sequences.
+	body = strings.ReplaceAll(body, `\n`, "\n")
+	plan.BodyClean = types.StringValue(body)
+
+	diags := resp.Plan.Set(ctx, plan)
+	resp.Diagnostics.Append(diags...)
+
+	// The 'algolia', 'revision', 'updated_at', and 'user' attributes are
+	// volatile and may show changes in the post-apply diff. If other
+	// attributes are changed, set these attributes to unknown to trigger a
+	// refresh.
+	if !state.BodyClean.Equal(plan.BodyClean) ||
+		!state.BodyHTML.Equal(plan.BodyHTML) ||
+		!state.Category.Equal(plan.Category) ||
+		!state.CategorySlug.Equal(plan.CategorySlug) ||
+		!state.Hidden.Equal(plan.Hidden) ||
+		!state.Order.Equal(plan.Order) ||
+		!state.ParentDoc.Equal(plan.ParentDoc) ||
+		!state.ParentDocSlug.Equal(plan.ParentDocSlug) ||
+		!state.Slug.Equal(plan.Slug) ||
+		!state.Title.Equal(plan.Title) ||
+		!state.Type.Equal(plan.Type) {
+
+		plan.Revision = types.Int64Unknown()
+		plan.UpdatedAt = types.StringUnknown()
+		plan.User = types.StringUnknown()
+
+		plan.Algolia = types.ObjectUnknown(
+			map[string]attr.Type{
+				"record_count":    types.Int64Type,
+				"publish_pending": types.BoolType,
+				"updated_at":      types.StringType,
+			},
+		)
+
+	}
+
+	diags = resp.Plan.Set(ctx, plan)
+	resp.Diagnostics.Append(diags...)
+}
+
 // docPlanToParams maps plan attributes to a `readme.DocParams` struct to create or update a doc.
 func docPlanToParams(ctx context.Context, plan docModel) readme.DocParams {
 	params := readme.DocParams{
-		Body:   strings.TrimSpace(plan.Body.ValueString()),
+		Body:   plan.Body.ValueString(),
 		Hidden: plan.Hidden.ValueBoolPointer(),
 		Order:  intPoint(int(plan.Order.ValueInt64())),
 		Title:  plan.Title.ValueString(),
@@ -199,11 +271,18 @@ func (r *docResource) Create(
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to create doc.",
-			fmt.Sprintf(
-				"There was a problem retrieving the doc '%s' after creation: %s.",
-				doc.Slug,
-				err.Error(),
-			),
+			fmt.Sprintf("There was a problem retrieving the doc '%s' after creation: %s.", doc.Slug, err.Error()),
+		)
+
+		return
+	}
+
+	// Get the doc a second time to ensure the state is fully populated.
+	state, _, err = getDoc(r.client, ctx, doc.Slug, state, requestOpts)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Unable to create doc.",
+			fmt.Sprintf("There was a problem retrieving the doc '%s' after creation: %s.", doc.Slug, err.Error()),
 		)
 
 		return
@@ -375,6 +454,21 @@ func (r *docResource) Update(
 		return
 	}
 
+	// Get the doc a second time to ensure the state is fully populated.
+	plan, _, err = getDoc(r.client, ctx, response.Slug, plan, requestOpts)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Unable to update doc.",
+			fmt.Sprintf(
+				"There was a problem retrieving the doc '%s' after update: %s.",
+				response.Slug,
+				err.Error(),
+			),
+		)
+
+		return
+	}
+
 	// Set refreshed state.
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 	if resp.Diagnostics.HasError() {
@@ -479,29 +573,18 @@ func (r *docResource) Schema(
 				Attributes: map[string]schema.Attribute{
 					"record_count": schema.Int64Attribute{
 						Computed: true,
+						PlanModifiers: []planmodifier.Int64{
+							int64planmodifier.UseStateForUnknown(),
+						},
 					},
 					"publish_pending": schema.BoolAttribute{
 						Computed: true,
+						PlanModifiers: []planmodifier.Bool{
+							boolplanmodifier.UseStateForUnknown(),
+						},
 					},
 					"updated_at": schema.StringAttribute{
 						Computed: true,
-						PlanModifiers: []planmodifier.String{
-							otherattributemodifier.StringModifyString(path.Root("body"), "Body", true),
-							otherattributemodifier.StringModifyString(path.Root("body_html"), "BodyHTML", true),
-							otherattributemodifier.StringModifyString(path.Root("category"), "Category", true),
-							otherattributemodifier.StringModifyString(path.Root("category_slug"), "CategorySlug", true),
-							otherattributemodifier.BoolModifyString(path.Root("hidden"), "Hidden", true),
-							otherattributemodifier.Int64ModifyString(path.Root("order"), "Order", true),
-							otherattributemodifier.StringModifyString(path.Root("parent_doc"), "ParentDoc", true),
-							otherattributemodifier.StringModifyString(
-								path.Root("parent_doc_slug"),
-								"ParentDocSlug",
-								true,
-							),
-							otherattributemodifier.StringModifyString(path.Root("slug"), "Slug", true),
-							otherattributemodifier.StringModifyString(path.Root("title"), "Title", true),
-							otherattributemodifier.StringModifyString(path.Root("type"), "Type", true),
-						},
 					},
 				},
 			},
@@ -683,10 +766,16 @@ func (r *docResource) Schema(
 			"is_api": schema.BoolAttribute{
 				Description: "Identifies if a doc is an API doc or not.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"is_reference": schema.BoolAttribute{
 				Description: "Identifies if a doc is a reference doc or not.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"link_external": schema.BoolAttribute{
 				Description: "Identifies a doc's link as external or not.",
@@ -789,23 +878,13 @@ func (r *docResource) Schema(
 			"project": schema.StringAttribute{
 				Description: "The ID of the project the doc is in.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"revision": schema.Int64Attribute{
 				Description: "A number that is incremented upon doc updates.",
 				Computed:    true,
-				PlanModifiers: []planmodifier.Int64{
-					otherattributemodifier.StringModifyInt64(path.Root("body"), "Body", true),
-					otherattributemodifier.StringModifyInt64(path.Root("body_html"), "BodyHTML", true),
-					otherattributemodifier.StringModifyInt64(path.Root("category"), "Category", true),
-					otherattributemodifier.StringModifyInt64(path.Root("category_slug"), "CategorySlug", true),
-					otherattributemodifier.BoolModifyInt64(path.Root("hidden"), "Hidden", true),
-					otherattributemodifier.Int64ModifyInt64(path.Root("order"), "Order", true),
-					otherattributemodifier.StringModifyInt64(path.Root("parent_doc"), "ParentDoc", true),
-					otherattributemodifier.StringModifyInt64(path.Root("parent_doc_slug"), "ParentDocSlug", true),
-					otherattributemodifier.StringModifyInt64(path.Root("slug"), "Slug", true),
-					otherattributemodifier.StringModifyInt64(path.Root("title"), "Title", true),
-					otherattributemodifier.StringModifyInt64(path.Root("type"), "Type", true),
-				},
 			},
 			"slug": schema.StringAttribute{
 				Description: "The slug of the doc.",
@@ -841,29 +920,10 @@ func (r *docResource) Schema(
 			"updated_at": schema.StringAttribute{
 				Description: "The timestamp of when the doc was last updated.",
 				Computed:    true,
-				PlanModifiers: []planmodifier.String{
-					otherattributemodifier.StringModifyString(path.Root("body"), "Body", true),
-					otherattributemodifier.StringModifyString(path.Root("body_html"), "BodyHTML", true),
-					otherattributemodifier.StringModifyString(path.Root("category"), "Category", true),
-					otherattributemodifier.StringModifyString(path.Root("category_slug"), "CategorySlug", true),
-					otherattributemodifier.BoolModifyString(path.Root("hidden"), "Hidden", true),
-					otherattributemodifier.Int64ModifyString(path.Root("order"), "Order", true),
-					otherattributemodifier.StringModifyString(path.Root("parent_doc"), "ParentDoc", true),
-					otherattributemodifier.StringModifyString(path.Root("parent_doc_slug"), "ParentDocSlug", true),
-					otherattributemodifier.StringModifyString(path.Root("slug"), "Slug", true),
-					otherattributemodifier.StringModifyString(path.Root("title"), "Title", true),
-					otherattributemodifier.StringModifyString(path.Root("type"), "Type", true),
-				},
 			},
 			"user": schema.StringAttribute{
 				Description: "The ID of the author of the doc in the web editor.",
 				Computed:    true,
-				PlanModifiers: []planmodifier.String{
-					// The user attribute is volatile and may show changes in
-					// the post-apply diff. This effectively triggers it to
-					// refresh whenever the document is updated.
-					otherattributemodifier.StringModifyString(path.Root("updated_at"), "UpdatedAt", true),
-				},
 			},
 			"use_slug": schema.StringAttribute{
 				Description: "**Use with caution!** Create the doc resource by importing an existing doc by its slug. " +

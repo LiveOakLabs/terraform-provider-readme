@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/liveoaklabs/readme-api-go-client/readme"
-	"github.com/liveoaklabs/terraform-provider-readme/readme/otherattributemodifier"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -233,11 +232,27 @@ func (r *versionResource) Schema(
 			"version_clean": schema.StringAttribute{
 				Description: "A 'clean' version string with certain characters replaced, usually a semantic version.",
 				Computed:    true,
-				PlanModifiers: []planmodifier.String{
-					otherattributemodifier.StringModifyString(path.Root("version"), "Version", false),
-				},
 			},
 		},
+	}
+}
+
+func (r *versionResource) ModifyPlan(
+	ctx context.Context,
+	req resource.ModifyPlanRequest,
+	resp *resource.ModifyPlanResponse,
+) {
+	var plan, state *versionResourceModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+
+	if state == nil || plan == nil {
+		return
+	}
+
+	// If the 'version' changes, update the 'version_clean' attribute.
+	if !plan.Version.Equal(state.Version) {
+		plan.VersionClean = types.StringUnknown()
 	}
 }
 

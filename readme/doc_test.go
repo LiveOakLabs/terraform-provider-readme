@@ -182,7 +182,8 @@ func docCommonGocks() {
 		Reply(200).
 		JSON(mockCategory)
 	// Lookup version.
-	gock.New(testURL).Get("/version").Persist().Reply(200).JSON(mockVersionList)
+	gock.New(testURL).Get("/version").Times(1).Reply(200).JSON(mockVersionList)
+	gock.New(testURL).Get("/version/" + mockVersionList[0].VersionClean).Times(1).Reply(200).JSON(mockVersion)
 	// List of docs to match parent doc.
 	gock.New(testURL).
 		Post("/docs").
