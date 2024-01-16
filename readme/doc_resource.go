@@ -399,6 +399,7 @@ func (r *docResource) Delete(
 		tflog.Info(ctx, fmt.Sprintf("use_slug is set to %s. Doc will not be "+
 			"deleted remotely but will be removed from state.", state.UseSlug.ValueString()))
 		resp.State.RemoveResource(ctx)
+
 		return
 	}
 
