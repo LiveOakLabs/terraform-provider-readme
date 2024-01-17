@@ -114,3 +114,7 @@ func TestProvider_EmptyAPIURL(t *testing.T) {
 		},
 	})
 }
+
+func escapeNewlines(s string) string {
+	return regexp.MustCompile(`\n`).ReplaceAllString(s, `\n`)
+}
