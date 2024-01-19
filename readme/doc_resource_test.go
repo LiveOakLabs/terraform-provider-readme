@@ -4,6 +4,7 @@ package readme
 import (
 	"fmt"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -35,7 +36,7 @@ func TestDocResource(t *testing.T) {
 					// Mock the request to create the resource.
 					gock.New(testURL).Post("/docs").Times(1).Reply(201).JSON(mockDoc)
 					// Mock the request to get and refresh the resource.
-					gock.New(testURL).Get("/docs/" + mockDoc.Slug).Times(2).Reply(200).JSON(mockDoc)
+					gock.New(testURL).Get("/docs/" + mockDoc.Slug).Times(3).Reply(200).JSON(mockDoc)
 				},
 				Check: docResourceCommonChecks(mockDoc, ""),
 			},
@@ -68,7 +69,7 @@ func TestDocResource(t *testing.T) {
 					// Mock the request to create the resource.
 					gock.New(testURL).Post("/docs").Times(1).Reply(201).JSON(mockDoc)
 					// Mock the request to get and refresh the resource.
-					gock.New(testURL).Get("/docs/" + mockDoc.Slug).Times(2).Reply(200).JSON(mockDoc)
+					gock.New(testURL).Get("/docs/" + mockDoc.Slug).Times(3).Reply(200).JSON(mockDoc)
 
 					gock.New(testURL).Delete("/docs/" + mockDoc.Slug).Times(1).Reply(204)
 				},
@@ -308,7 +309,8 @@ func TestDocResource_FrontMatter(t *testing.T) {
 					---
 					title: ignored
 					---
-					This is a document.`,
+					This is a document.
+				`,
 			},
 			attributes: fmt.Sprintf(
 				`
@@ -326,9 +328,8 @@ func TestDocResource_FrontMatter(t *testing.T) {
 					---
 					title: %s
 					---
-					This is a document.`,
-					mockDoc.Title,
-				),
+					This is a document.
+				`, mockDoc.Title),
 			},
 			attributes: fmt.Sprintf(
 				`
@@ -551,7 +552,8 @@ func TestDocResource_FrontMatter(t *testing.T) {
 					---
 					type: %s
 					---
-					This is a document.`, mockDoc.Type,
+					This is a document.
+				`, mockDoc.Type,
 				),
 			},
 			attributes: fmt.Sprintf(
@@ -569,6 +571,7 @@ func TestDocResource_FrontMatter(t *testing.T) {
 			// Set up the doc we're testing, derived from the common mock with the expected attributes overridden.
 			expect := mockDoc
 			expect.Body = removeIndents(testCase.expect.Body)
+			expect.Body = strings.Trim(expect.Body, "\n")
 
 			if testCase.expect.Hidden != nil {
 				expect.Hidden = *testCase.expect.Hidden
@@ -588,11 +591,11 @@ func TestDocResource_FrontMatter(t *testing.T) {
 						Config: providerConfig + fmt.Sprintf(
 							`
 								resource "readme_doc" "test" {
-										body = chomp("%s")
-										%s
+									body = chomp("%s")
+									%s
 								}
 							`,
-							replaceNewlines(expect.Body),
+							escapeNewlines(expect.Body),
 							testCase.attributes,
 						),
 						PreConfig: func() {
@@ -672,16 +675,16 @@ func TestDocResource_User_Attribute_Changes(t *testing.T) {
 				Config: providerConfig + fmt.Sprintf(`
 					resource "readme_doc" "test" {
 						title    = "%s"
-						body     = "body"
+						body     = "%s"
 						category = "%s"
 						type     = "%s"
 					}`,
-					expectedDoc.Title, expectedDoc.Category, expectedDoc.Type,
+					expectedDoc.Title, expectedDoc.Body, expectedDoc.Category, expectedDoc.Type,
 				),
 				PreConfig: func() {
 					docCommonGocks()
 					gock.New(testURL).Post("/docs").Times(1).Reply(201).JSON(expectedDoc)
-					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(2).Reply(200).JSON(expectedDoc)
+					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(3).Reply(200).JSON(expectedDoc)
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(
@@ -702,12 +705,13 @@ func TestDocResource_User_Attribute_Changes(t *testing.T) {
 					updatedDoc.Title, updatedDoc.Category, updatedDoc.Type,
 				),
 				PreConfig: func() {
+					updatedDoc.Body = "updated body"
 					docCommonGocks()
 					// First request responds with the original user.
 					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(1).Reply(200).JSON(expectedDoc)
 					gock.New(testURL).Put("/docs").Times(1).Reply(200).JSON(updatedDoc)
 					// Post-update request has the updated user.
-					gock.New(testURL).Get("/docs/" + updatedDoc.Slug).Times(2).Reply(200).JSON(updatedDoc)
+					gock.New(testURL).Get("/docs/" + updatedDoc.Slug).Times(3).Reply(200).JSON(updatedDoc)
 					gock.New(testURL).Delete("/docs/" + updatedDoc.Slug).Times(1).Reply(204)
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -750,7 +754,7 @@ func TestDocResource_Hidden_Attribute_Changes(t *testing.T) {
 
 					docCommonGocks()
 					gock.New(testURL).Post("/docs").Times(1).Reply(201).JSON(expectedDoc)
-					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(2).Reply(200).JSON(expectedDoc)
+					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(3).Reply(200).JSON(expectedDoc)
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(
@@ -765,7 +769,7 @@ func TestDocResource_Hidden_Attribute_Changes(t *testing.T) {
 				Config: providerConfig + fmt.Sprintf(`
 					resource "readme_doc" "test" {
 						title    = "%s"
-					  body     = "body"
+						body     = "body"
 						category = "%s"
 						hidden   = true
 						type     = "%s"
@@ -793,19 +797,19 @@ func TestDocResource_Hidden_Attribute_Changes(t *testing.T) {
 				Config: providerConfig + fmt.Sprintf(`
 					resource "readme_doc" "test" {
 						title    = "%s"
-					  body     = "---\nhidden: false\n---\nbody"
+					    body     = "---\nhidden: false\n---\nbody"
 						category = "%s"
 						type     = "%s"
 					}`,
 					expectedDoc.Title, expectedDoc.Category, expectedDoc.Type,
 				),
 				PreConfig: func() {
-					expectedDoc.Body = `---\nhidden: false\n---\nbody`
+					expectedDoc.Body = "---\nhidden: false\n---\nbody"
 					expectedDoc.Hidden = false
 
 					docCommonGocks()
 					gock.New(testURL).Put("/docs/" + expectedDoc.Slug).Times(1).Reply(200).JSON(expectedDoc)
-					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(3).Reply(200).JSON(expectedDoc)
+					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(4).Reply(200).JSON(expectedDoc)
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(
@@ -820,7 +824,7 @@ func TestDocResource_Hidden_Attribute_Changes(t *testing.T) {
 				Config: providerConfig + fmt.Sprintf(`
 					resource "readme_doc" "test" {
 						title    = "%s"
-					  body     = "body"
+						body     = "body"
 						category = "%s"
 						hidden   = true
 						type     = "%s"
@@ -848,7 +852,7 @@ func TestDocResource_Hidden_Attribute_Changes(t *testing.T) {
 				Config: providerConfig + fmt.Sprintf(`
 					resource "readme_doc" "test" {
 						title    = "%s"
-					  body     = "body"
+						body     = "body"
 						category = "%s"
 						hidden   = false
 						type     = "%s"
@@ -876,7 +880,7 @@ func TestDocResource_Hidden_Attribute_Changes(t *testing.T) {
 				Config: providerConfig + fmt.Sprintf(`
 					resource "readme_doc" "test" {
 						title    = "%s"
-					  body     = "body"
+						body     = "body"
 						category = "%s"
 						type     = "%s"
 					}`,
@@ -929,11 +933,12 @@ func TestDocResource_Order_Attribute_Changes(t *testing.T) {
 					expectedDoc.Title, expectedDoc.Body, expectedDoc.Category, expectedDoc.Type,
 				),
 				PreConfig: func() {
+					gock.OffAll()
 					expectedDoc.Order = 1
 
 					docCommonGocks()
 					gock.New(testURL).Post("/docs").Times(1).Reply(201).JSON(expectedDoc)
-					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(2).Reply(200).JSON(expectedDoc)
+					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(3).Reply(200).JSON(expectedDoc)
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(
@@ -948,7 +953,7 @@ func TestDocResource_Order_Attribute_Changes(t *testing.T) {
 				Config: providerConfig + fmt.Sprintf(`
 					resource "readme_doc" "test" {
 						title    = "%s"
-					  body     = "%s"
+						body     = "%s"
 						category = "%s"
 						order    = 2
 						type     = "%s"
@@ -975,19 +980,20 @@ func TestDocResource_Order_Attribute_Changes(t *testing.T) {
 				Config: providerConfig + fmt.Sprintf(`
 					resource "readme_doc" "test" {
 						title    = "%s"
-					  body     = "---\norder: 3\n---\nbody"
+						body     = "---\norder: 3\n---\nbody"
 						category = "%s"
 						type     = "%s"
 					}`,
 					expectedDoc.Title, expectedDoc.Category, expectedDoc.Type,
 				),
 				PreConfig: func() {
-					expectedDoc.Body = `---\norder: 3\n---\nbody`
+					gock.OffAll()
+					expectedDoc.Body = "---\norder: 3\n---\nbody"
 					expectedDoc.Order = 3
 
 					docCommonGocks()
 					gock.New(testURL).Put("/docs/" + expectedDoc.Slug).Times(1).Reply(200).JSON(expectedDoc)
-					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(3).Reply(200).JSON(expectedDoc)
+					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(4).Reply(200).JSON(expectedDoc)
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(
@@ -1002,7 +1008,7 @@ func TestDocResource_Order_Attribute_Changes(t *testing.T) {
 				Config: providerConfig + fmt.Sprintf(`
 					resource "readme_doc" "test" {
 						title    = "%s"
-					  body     = "%s"
+					    body     = "%s"
 						category = "%s"
 						order    = 4
 						type     = "%s"
@@ -1015,7 +1021,7 @@ func TestDocResource_Order_Attribute_Changes(t *testing.T) {
 
 					docCommonGocks()
 					gock.New(testURL).Put("/docs/" + expectedDoc.Slug).Times(1).Reply(200).JSON(expectedDoc)
-					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(3).Reply(200).JSON(expectedDoc)
+					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(4).Reply(200).JSON(expectedDoc)
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(
@@ -1030,7 +1036,7 @@ func TestDocResource_Order_Attribute_Changes(t *testing.T) {
 				Config: providerConfig + fmt.Sprintf(`
 					resource "readme_doc" "test" {
 						title    = "%s"
-					  body     = "%s"
+						body     = "%s"
 						category = "%s"
 						type     = "%s"
 					}`,
@@ -1064,7 +1070,7 @@ func TestDocResource_Order_FrontMatter_Changes(t *testing.T) {
 	defer gock.OffAll()
 
 	expectedDoc := mockDoc
-	expectedDoc.Body = `---\norder: 1\n---\nbody`
+	expectedDoc.Body = "---\norder: 1\n---\nbody"
 	expectedDoc.Order = 1
 
 	resource.Test(t, resource.TestCase{
@@ -1076,16 +1082,17 @@ func TestDocResource_Order_FrontMatter_Changes(t *testing.T) {
 				Config: providerConfig + fmt.Sprintf(`
 					resource "readme_doc" "test" {
 						title    = "%s"
-						body     = "%s"
+						body     = "---\norder: 1\n---\nbody"
 						category = "%s"
 						type     = "%s"
 					}`,
-					expectedDoc.Title, expectedDoc.Body, expectedDoc.Category, expectedDoc.Type,
+					expectedDoc.Title, expectedDoc.Category, expectedDoc.Type,
 				),
 				PreConfig: func() {
+					gock.OffAll()
 					docCommonGocks()
 					gock.New(testURL).Post("/docs").Times(1).Reply(201).JSON(expectedDoc)
-					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(2).Reply(200).JSON(expectedDoc)
+					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(3).Reply(200).JSON(expectedDoc)
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(
@@ -1100,20 +1107,20 @@ func TestDocResource_Order_FrontMatter_Changes(t *testing.T) {
 				Config: providerConfig + fmt.Sprintf(`
 					resource "readme_doc" "test" {
 						title    = "%s"
-						#body     = "%s"
-					  body = "---\norder: 2\n---\nbody"
+						body     = "---\norder: 2\n---\nbody"
 						category = "%s"
 						type     = "%s"
 					}`,
-					expectedDoc.Title, expectedDoc.Body, expectedDoc.Category, expectedDoc.Type,
+					expectedDoc.Title, expectedDoc.Category, expectedDoc.Type,
 				),
 				PreConfig: func() {
-					expectedDoc.Body = `---\norder: 2\n---\nbody`
+					gock.OffAll()
+					expectedDoc.Body = "---\norder: 2\n---\nbody"
 					expectedDoc.Order = 2
 
 					docCommonGocks()
 					gock.New(testURL).Put("/docs/" + expectedDoc.Slug).Times(1).Reply(200).JSON(expectedDoc)
-					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(3).Reply(200).JSON(expectedDoc)
+					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(4).Reply(200).JSON(expectedDoc)
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(
@@ -1128,19 +1135,20 @@ func TestDocResource_Order_FrontMatter_Changes(t *testing.T) {
 				Config: providerConfig + fmt.Sprintf(`
 					resource "readme_doc" "test" {
 						title    = "%s"
-					  body     = "body"
+						body     = "body"
 						category = "%s"
 						type     = "%s"
 					}`,
 					expectedDoc.Title, expectedDoc.Category, expectedDoc.Type,
 				),
 				PreConfig: func() {
+					gock.OffAll()
 					expectedDoc.Body = `body`
 					expectedDoc.Order = 999
 
 					docCommonGocks()
 					gock.New(testURL).Put("/docs/" + expectedDoc.Slug).Times(1).Reply(200).JSON(expectedDoc)
-					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(3).Reply(200).JSON(expectedDoc)
+					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(4).Reply(200).JSON(expectedDoc)
 
 					// Post-test deletion
 					gock.New(testURL).Delete("/docs/" + expectedDoc.Slug).Times(1).Reply(204)
@@ -1189,7 +1197,7 @@ func TestDocRenamedSlugResource(t *testing.T) {
 					// Mock the request to create the resource.
 					gock.New(testURL).Post("/docs").Times(1).Reply(201).JSON(mockDoc)
 					// Mock the request to get and refresh the resource.
-					gock.New(testURL).Get("/docs/" + mockDoc.Slug).Times(2).Reply(200).JSON(mockDoc)
+					gock.New(testURL).Get("/docs/" + mockDoc.Slug).Times(3).Reply(200).JSON(mockDoc)
 				},
 				Check: docResourceCommonChecks(mockDoc, ""),
 			},
@@ -1226,7 +1234,7 @@ func TestDocRenamedSlugResource(t *testing.T) {
 
 					// The matched doc is requested from the search results.
 					// It's also requested again after the rename.
-					gock.New(testURL).Get("/docs/" + "new-slug").Times(3).Reply(200).JSON(renamed)
+					gock.New(testURL).Get("/docs/" + "new-slug").Times(4).Reply(200).JSON(renamed)
 
 					// An update is triggered to match state with the new slug.
 					gock.New(testURL).Put("/docs/" + "new-slug").Times(1).Reply(200).JSON(renamed)

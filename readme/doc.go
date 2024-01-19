@@ -181,7 +181,6 @@ func getDoc(
 
 			parent, apiResponse, err := client.Doc.Get(IDPrefix+state.ParentDoc.ValueString(), options)
 			if err != nil {
-				// failing here
 				return state, apiResponse, errors.New(clientError(err, apiResponse))
 			}
 			state.ParentDocSlug = types.StringValue(parent.Slug)
