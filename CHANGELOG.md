@@ -1,5 +1,27 @@
 # Changelog
 
+## v0.3.0 - 2024-01-19
+
+### 🚀 Features
+
+- feat: changelog resource and data source @joshbeard (#100)
+
+### 🐛 Bug Fixes
+
+- fix: doc attribute inconsistencies @joshbeard (#101)
+
+### Maintenance
+
+- build(deps): bump github.com/hashicorp/terraform-plugin-framework from 1.4.2 to 1.5.0 @dependabot (#99)
+- build(deps): bump github.com/cloudflare/circl from 1.3.3 to 1.3.7 @dependabot (#98)
+- build(deps): bump github.com/go-git/go-git/v5 from 5.10.1 to 5.11.0 @dependabot (#96)
+- build(deps): bump crazy-max/ghaction-import-gpg from 6.0.0 to 6.1.0 @dependabot (#97)
+- build(deps): bump golang.org/x/crypto from 0.15.0 to 0.17.0 @dependabot (#95)
+- build(deps): bump github.com/hashicorp/terraform-plugin-sdk/v2 from 2.30.0 to 2.31.0 @dependabot (#94)
+- build(deps): bump github.com/hashicorp/terraform-plugin-go from 0.19.1 to 0.20.0 @dependabot (#93)
+- build(deps): bump github/codeql-action from 2 to 3 @dependabot (#92)
+- build(deps): bump actions/setup-go from 4.1.0 to 5.0.0 @dependabot (#91)
+
 ## v0.2.1 - 2023-12-04
 
 ### Bug Fixes
