@@ -182,31 +182,6 @@ func (r changelogResource) ValidateConfig(
 			return
 		}
 	}
-
-	if data.Type.IsNull() {
-		// check front matter for 'type'.
-		typeMatter, diag := frontmatter.GetValue(ctx, data.Body.ValueString(), "Type")
-		if diag != "" {
-			resp.Diagnostics.AddAttributeError(
-				path.Root("type"),
-				"Error checking front matter during validation.",
-				diag,
-			)
-
-			return
-		}
-
-		// Fail if type is not set in front matter or the attribute.
-		if typeMatter == (reflect.Value{}) {
-			resp.Diagnostics.AddAttributeError(
-				path.Root("type"),
-				"Missing required attribute.",
-				"'type' must be set using the attribute or in the body front matter.",
-			)
-
-			return
-		}
-	}
 }
 
 // Create creates the changelog and sets the initial Terraform state.
@@ -417,7 +392,7 @@ func (r *changelogResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 				},
 			},
 			"type": schema.StringAttribute{
-				Description: "__REQUIRED.__ The type of changelog. This can alternatively be set using the `type` front matter key. " +
+				Description: "The type of changelog. This can alternatively be set using the `type` front matter key. " +
 					"Valid values: added, fixed, improved, deprecated, removed",
 				Computed: true,
 				Optional: true,

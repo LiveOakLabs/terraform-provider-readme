@@ -45,7 +45,7 @@ resource "readme_changelog" "example" {
 
 - `hidden` (Boolean) Whether the changelog is hidden. This can alternatively be set using the `hidden` front matter key.
 - `title` (String) __REQUIRED.__ The title of the changelog. This can alternatively be set using the `title` front matter key.
-- `type` (String) __REQUIRED.__ The type of changelog. This can alternatively be set using the `type` front matter key. Valid values: added, fixed, improved, deprecated, removed
+- `type` (String) The type of changelog. This can alternatively be set using the `type` front matter key. Valid values: added, fixed, improved, deprecated, removed
 
 ### Read-Only
 
