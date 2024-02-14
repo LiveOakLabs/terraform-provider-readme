@@ -1,5 +1,24 @@
 # Changelog
 
+## v0.3.1 - 2024-02-14
+
+### Bug Fixes
+
+- fix: changelog 'type' is optional @joshbeard (#115)
+
+### Maintenance
+
+- build(deps): bump securego/gosec from 2.18.2 to 2.19.0 @dependabot (#114)
+- build(deps): bump golang.org/x/vuln from 1.0.3 to 1.0.4 @dependabot (#113)
+- build(deps): bump github.com/hashicorp/terraform-plugin-sdk/v2 from 2.31.0 to 2.32.0 @dependabot (#112)
+- build(deps): bump github.com/segmentio/golines from 0.11.0 to 0.12.2 @dependabot (#110)
+- build(deps): bump release-drafter/release-drafter from 5 to 6 @dependabot (#111)
+- build(deps): bump mvdan.cc/gofumpt from 0.5.0 to 0.6.0 @dependabot (#108)
+- build(deps): bump github.com/hashicorp/terraform-plugin-go from 0.20.0 to 0.21.0 @dependabot (#107)
+- build(deps): bump github.com/hashicorp/terraform-plugin-docs from 0.16.0 to 0.18.0 @dependabot (#106)
+- build(deps): bump golang.org/x/vuln from 1.0.1 to 1.0.3 @dependabot (#109)
+- build(deps): bump github.com/liveoaklabs/readme-api-go-client from 0.1.3 to 0.2.0 @dependabot (#102)
+
 ## v0.3.0 - 2024-01-19
 
 ### 🚀 Features
