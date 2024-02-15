@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.3.2 - 2024-02-15
+
+### Changes
+
+- Bump API client; omit empty frontmatter @joshbeard (#116)
+
+### Bug Fixes
+
+- fix: changelog title validation @joshbeard (#117)
+
 ## v0.3.1 - 2024-02-14
 
 ### Bug Fixes
