@@ -2,7 +2,6 @@ package readme
 
 import (
 	"context"
-	"reflect"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -95,16 +94,17 @@ func (r *changelogResource) ModifyPlan(
 	plan := &changelogResourceModel{}
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 
-	if resp.Diagnostics.HasError() || plan == nil {
+	state := &changelogResourceModel{}
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+
+	if resp.Diagnostics.HasError() || plan == nil || state == nil {
 		return
 	}
 
-	// Trim leading and trailing whitespace from the body.
-	// The ReadMe API normalizes this, but we need to track the original value
-	// provided by the user.
-	// The 'body_clean' attribute is used to track the normalized value to
-	// compare against the API response.
 	body := strings.TrimSpace(plan.Body.ValueString())
+
+	// Expand newline escape sequences.
+	body = strings.ReplaceAll(body, `\n`, "\n")
 	plan.BodyClean = types.StringValue(body)
 
 	if plan.Hidden.IsNull() {
@@ -114,18 +114,14 @@ func (r *changelogResource) ModifyPlan(
 	diags := resp.Plan.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
 
-	state := &changelogResourceModel{}
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-
-	if state == nil {
-		return
-	}
-
 	// Several attributes are refreshed whenever the changelog is modified.
 	// This may need to be added to if additional attributes are discovered to
 	// be dynamic.
-	if plan.BodyClean != state.BodyClean ||
-		plan.Hidden != state.Hidden {
+	if !state.BodyClean.Equal(plan.BodyClean) ||
+		!state.Hidden.Equal(plan.Hidden) ||
+		!state.Title.Equal(plan.Title) ||
+		!state.Type.Equal(plan.Type) {
+
 		tflog.Info(ctx, "Changelog body has changed. Refreshing dynamic attributes.")
 
 		plan.Algolia = types.ObjectUnknown(map[string]attr.Type{
@@ -145,43 +141,16 @@ func (r *changelogResource) ModifyPlan(
 		})
 	}
 
+	if plan.Title.ValueString() == "" {
+		resp.Diagnostics.AddError("Title is not set.",
+			"The 'title' attribute is not set. This is a required attribute for the changelog resource "+
+				"and must be set either in the resource configuration or in the front matter of the changelog body.")
+
+		return
+	}
+
 	diags = resp.Plan.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
-}
-
-// ValidateConfig is used for validating attribute values.
-func (r changelogResource) ValidateConfig(
-	ctx context.Context,
-	req resource.ValidateConfigRequest,
-	resp *resource.ValidateConfigResponse,
-) {
-	var data changelogResourceModel
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-
-	if data.Title.IsNull() {
-		// check front matter for 'title'.
-		titleMatter, diag := frontmatter.GetValue(ctx, data.Body.ValueString(), "Title")
-		if diag != "" {
-			resp.Diagnostics.AddAttributeError(
-				path.Root("title"),
-				"Error checking front matter during validation.",
-				diag,
-			)
-
-			return
-		}
-
-		// Fail if title is not set in front matter or the attribute.
-		if titleMatter == (reflect.Value{}) {
-			resp.Diagnostics.AddAttributeError(
-				path.Root("title"),
-				"Missing required attribute.",
-				"'title' must be set using the attribute or in the body front matter.",
-			)
-
-			return
-		}
-	}
 }
 
 // Create creates the changelog and sets the initial Terraform state.
