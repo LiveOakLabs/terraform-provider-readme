@@ -148,7 +148,6 @@ func TestChangelogResource(t *testing.T) {
 			{
 				PreConfig: func() {
 					gock.OffAll()
-					// Get category list to lookup category.
 					gock.New(testURL).
 						Put("/changelogs").
 						Times(1).
@@ -202,6 +201,57 @@ func TestChangelogResource(t *testing.T) {
 						JSON(mockChangelogs[0])
 					gock.New(testURL).Delete("/changelogs/" + mockChangelogs[0].Slug).Times(1).Reply(204)
 				},
+			},
+		},
+	})
+}
+
+func TestChangelogResourceFrontMatter(t *testing.T) {
+	// Close all gocks when completed.
+	defer gock.OffAll()
+
+	mockChangelog := mockChangelogs[0]
+	mockChangelog.Title = "turtle"
+	mockChangelog.Body = "---\ntitle: turtle\n---\nturtles are cool"
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					gock.OffAll()
+					gock.New(testURL).
+						Get("/changelogs/" + mockChangelog.Slug).
+						Persist().
+						Reply(200).
+						JSON(mockChangelog)
+					gock.New(testURL).
+						Post("/changelogs").
+						Persist().
+						Reply(201).
+						JSON(mockChangelog)
+					gock.New(testURL).
+						Delete("/changelogs/" + mockChangelog.Slug).
+						Times(1).
+						Reply(204)
+				},
+				Config: providerConfig + `
+					resource "readme_changelog" "test" {
+						body  = "` + escapeNewlines(mockChangelog.Body) + `"
+					}`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"readme_changelog.test",
+						"id",
+						mockChangelog.ID,
+					),
+					resource.TestCheckResourceAttr(
+						"readme_changelog.test",
+						"title",
+						"turtle",
+					),
+				),
 			},
 		},
 	})

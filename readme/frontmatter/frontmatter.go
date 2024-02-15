@@ -18,16 +18,16 @@ import (
 // ReadmeFrontMatter represents the front matter keys available to ReadMe changelogs, custom pages, and docs.
 type ReadmeFrontMatter struct {
 	Body          string                `yaml:"body,omitempty"`          // changelogs, custom pages, docs
-	Category      string                `yaml:"category"`                // docs
-	CategorySlug  string                `yaml:"categorySlug"`            // docs
+	Category      string                `yaml:"category,omitempty"`      // docs
+	CategorySlug  string                `yaml:"categorySlug,omitempty"`  // docs
 	Error         readme.DocErrorObject `yaml:"error,omitempty"`         // docs
 	Hidden        *bool                 `yaml:"hidden"`                  // changelogs, custom pages, docs
 	HTML          string                `yaml:"html,omitempty"`          // custom page
 	HTMLMode      *bool                 `yaml:"htmlmode"`                // custom page
-	Order         int64                 `yaml:"order"`                   // docs
+	Order         int64                 `yaml:"order,omitempty"`         // docs
 	ParentDoc     string                `yaml:"parentDoc,omitempty"`     // docs
 	ParentDocSlug string                `yaml:"parentDocSlug,omitempty"` // docs
-	Title         string                `yaml:"title"`                   // changelogs, custom pages, docs
+	Title         string                `yaml:"title,omitempty"`         // changelogs, custom pages, docs
 	Type          string                `yaml:"type,omitempty"`          // changelogs, docs
 }
 
