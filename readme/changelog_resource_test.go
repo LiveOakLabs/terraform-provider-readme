@@ -138,11 +138,19 @@ func TestChangelogResource(t *testing.T) {
 			},
 			// Test updating with no title results in error.
 			{
-				ExpectError: regexp.MustCompile("'title' must be set using the attribute or in the body front matter."),
+				ExpectError: regexp.MustCompile("The 'title' attribute is not set."),
 				Config: providerConfig + `
 					resource "readme_changelog" "test" {
 						body  = "no title is set with front matter or attribute"
 				}`,
+				PreConfig: func() {
+					gock.OffAll()
+					gock.New(testURL).
+						Get("/changelogs/" + mockChangelogs[0].Slug).
+						Times(1).
+						Reply(200).
+						JSON(mockChangelogs[0])
+				},
 			},
 			// Test updating with front matter.
 			{
