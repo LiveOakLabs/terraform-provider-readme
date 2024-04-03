@@ -54,7 +54,6 @@ func TestDocResource(t *testing.T) {
 				),
 				PreConfig: func() {
 					gock.OffAll()
-					docCommonGocks()
 					// Pre-update read.
 					mockAPIError.Error = "DOC_NOTFOUND"
 					gock.New(testURL).Get("/docs/" + mockDoc.Slug).Times(1).Reply(404).JSON(mockAPIError)
@@ -65,6 +64,36 @@ func TestDocResource(t *testing.T) {
 						Times(1).
 						Reply(200).
 						JSON(readme.DocSearchResult{})
+
+					// Get category list to lookup category.
+					gock.New(testURL).
+						Get("/categories").
+						MatchParam("perPage", "100").
+						MatchParam("page", "1").
+						Reply(200).
+						AddHeader("link", `'<>; rel="next", <>; rel="prev", <>; rel="last"'`).
+						AddHeader("x-total-count", "1").
+						JSON(mockCategoryList)
+					// Lookup category to get slug.
+					gock.New(testURL).
+						Get("/categories/" + mockCategory.Slug).
+						Reply(200).
+						JSON(mockCategory)
+					// Lookup version.
+					gock.New(testURL).Get("/version").Times(1).Reply(200).JSON(mockVersionList)
+					gock.New(testURL).Get("/version/" + mockVersionList[0].VersionClean).Times(1).Reply(200).JSON(mockVersion)
+					// List of docs to match parent doc.
+					gock.New(testURL).
+						Post("/docs").
+						Path("search").
+						MatchParam("search", mockDocParent.ID).
+						Reply(200).
+						JSON(mockDocSearchResponse)
+					gock.New(testURL).
+						Get("/docs/" + mockDocParent.Slug).
+						Times(1).
+						Reply(200).
+						JSON(mockDocParent)
 
 					// Mock the request to create the resource.
 					gock.New(testURL).Post("/docs").Times(1).Reply(201).JSON(mockDoc)

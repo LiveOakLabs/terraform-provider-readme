@@ -363,7 +363,8 @@ func (r *docResource) Read(
 			tflog.Info(ctx, fmt.Sprintf("doc %s not found when looking up by slug, performing search", slug))
 			state, apiResponse, err = getDoc(r.client, ctx, IDPrefix+stateID, state, requestOpts)
 			if err != nil {
-				if strings.Contains(err.Error(), "no doc found matching id") {
+				if strings.Contains(err.Error(), "no doc found matching id") ||
+					strings.Contains(err.Error(), fmt.Sprintf("The doc with the slug '%s' couldn't be found.", IDPrefix+stateID)) {
 					tflog.Info(
 						ctx,
 						fmt.Sprintf(

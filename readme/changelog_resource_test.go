@@ -136,22 +136,6 @@ func TestChangelogResource(t *testing.T) {
 					),
 				),
 			},
-			// Test updating with no title results in error.
-			{
-				ExpectError: regexp.MustCompile("The 'title' attribute is not set."),
-				Config: providerConfig + `
-					resource "readme_changelog" "test" {
-						body  = "no title is set with front matter or attribute"
-				}`,
-				PreConfig: func() {
-					gock.OffAll()
-					gock.New(testURL).
-						Get("/changelogs/" + mockChangelogs[0].Slug).
-						Times(1).
-						Reply(200).
-						JSON(mockChangelogs[0])
-				},
-			},
 			// Test updating with front matter.
 			{
 				PreConfig: func() {
@@ -207,6 +191,22 @@ func TestChangelogResource(t *testing.T) {
 						Times(2).
 						Reply(200).
 						JSON(mockChangelogs[0])
+				},
+			},
+			// Test updating with no title results in error.
+			{
+				ExpectError: regexp.MustCompile("Title is not set"),
+				Config: providerConfig + `
+					resource "readme_changelog" "test" {
+						body  = "no title is set with front matter or attribute"
+				}`,
+				PreConfig: func() {
+					gock.OffAll()
+					gock.New(testURL).
+						Get("/changelogs/" + mockChangelogs[0].Slug).
+						Times(1).
+						Reply(200).
+						JSON(mockChangelogs[0])
 					gock.New(testURL).Delete("/changelogs/" + mockChangelogs[0].Slug).Times(1).Reply(204)
 				},
 			},
@@ -258,6 +258,88 @@ func TestChangelogResourceFrontMatter(t *testing.T) {
 						"readme_changelog.test",
 						"title",
 						"turtle",
+					),
+				),
+			},
+		},
+	})
+}
+
+// Test that a changelog gets re-created when it's deleted externally.
+func TestChangelogResource_ReCreate(t *testing.T) {
+	// Close all gocks when completed.
+	defer gock.OffAll()
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					gock.OffAll()
+					gock.New(testURL).
+						Get("/changelogs/" + mockChangelogs[0].Slug).
+						Persist().
+						Reply(200).
+						JSON(mockChangelogs[0])
+					gock.New(testURL).
+						Post("/changelogs").
+						Persist().
+						Reply(201).
+						JSON(mockChangelogs[0])
+				},
+				Config: providerConfig + `
+					resource "readme_changelog" "test" {
+						title = "` + mockChangelogs[0].Title + `"
+						type  = "` + mockChangelogs[0].Type + `"
+						body  = "` + mockChangelogs[0].Body + `"
+					}`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"readme_changelog.test",
+						"id",
+						mockChangelogs[0].ID,
+					),
+				),
+			},
+			{
+				PreConfig: func() {
+					gock.OffAll()
+					// Initial read returns 404.
+					gock.New(testURL).
+						Get("/changelogs/" + mockChangelogs[0].Slug).
+						Times(1).
+						Reply(404).
+						JSON(map[string]string{"message": "Not Found"})
+					// Create a new changelog.
+					gock.New(testURL).
+						Post("/changelogs").
+						Persist().
+						Reply(201).
+						JSON(mockChangelogs[0])
+					// Post-create read.
+					gock.New(testURL).
+						Get("/changelogs/" + mockChangelogs[0].Slug).
+						Times(2).
+						Reply(200).
+						JSON(mockChangelogs[0])
+					// Post-run refresh.
+					gock.New(testURL).
+						Delete("/changelogs/" + mockChangelogs[0].Slug).
+						Times(1).
+						Reply(204)
+				},
+				Config: providerConfig + `
+					resource "readme_changelog" "test" {
+						title = "` + mockChangelogs[0].Title + `"
+						type  = "` + mockChangelogs[0].Type + `"
+						body  = "` + mockChangelogs[0].Body + `"
+					}`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"readme_changelog.test",
+						"id",
+						mockChangelogs[0].ID,
 					),
 				),
 			},
