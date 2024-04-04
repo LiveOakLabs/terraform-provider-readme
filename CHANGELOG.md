@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.3.3 - 2024-04-04
+
+### Bug Fixes
+
+- Gracefully handle deleted docs and changelogs @joshbeard (#125)
+
+### Maintenance
+
+- build(deps): bump github.com/hashicorp/terraform-plugin-framework from 1.6.1 to 1.7.0 @dependabot (#124)
+- Dependency updates @joshbeard (#123)
+
 ## v0.3.2 - 2024-02-15
 
 ### Changes
