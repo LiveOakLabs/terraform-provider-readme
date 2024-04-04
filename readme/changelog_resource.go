@@ -184,7 +184,7 @@ func (r *changelogResource) Create(ctx context.Context, req resource.CreateReque
 	// Get the changelog
 	changelog, _, err = r.client.Changelog.Get(changelog.Slug)
 	if err != nil {
-		resp.Diagnostics.AddError("Unable to retrieve changelog.", err.Error())
+		resp.Diagnostics.AddError("Unable to retrieve changelog during create.", err.Error())
 
 		return
 	}
@@ -203,9 +203,16 @@ func (r *changelogResource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	changelog, _, err := r.client.Changelog.Get(state.Slug.ValueString())
+	changelog, apiResponse, err := r.client.Changelog.Get(state.Slug.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError("Unable to retrieve changelog.", err.Error())
+		if apiResponse != nil && apiResponse.HTTPResponse.StatusCode == 404 {
+			tflog.Info(ctx, "Changelog not found. Removing from state.")
+			resp.State.RemoveResource(ctx)
+
+			return
+		}
+
+		resp.Diagnostics.AddError("Unable to retrieve changelog during read.", err.Error())
 
 		return
 	}
@@ -247,7 +254,7 @@ func (r *changelogResource) Update(ctx context.Context, req resource.UpdateReque
 	// Get the changelog
 	changelog, _, err := r.client.Changelog.Get(state.Slug.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError("Unable to retrieve changelog.", err.Error())
+		resp.Diagnostics.AddError("Unable to retrieve changelog during update.", err.Error())
 
 		return
 	}
