@@ -7,7 +7,7 @@ require github.com/liveoaklabs/readme-api-go-client v0.2.2
 require (
 	github.com/adrg/frontmatter v0.2.0
 	github.com/boumenot/gocover-cobertura v1.2.0
-	github.com/hashicorp/terraform-plugin-docs v0.18.0
+	github.com/hashicorp/terraform-plugin-docs v0.19.1
 	github.com/hashicorp/terraform-plugin-framework v1.7.0
 	github.com/hashicorp/terraform-plugin-go v0.22.1
 	github.com/hashicorp/terraform-plugin-log v0.9.0
@@ -27,7 +27,7 @@ require (
 	github.com/Masterminds/semver/v3 v3.2.0 // indirect
 	github.com/Masterminds/sprig/v3 v3.2.3 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
-	github.com/ProtonMail/go-crypto v1.1.0-alpha.0 // indirect
+	github.com/ProtonMail/go-crypto v1.1.0-alpha.2 // indirect
 	github.com/VividCortex/ewma v1.2.0 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
@@ -35,6 +35,7 @@ require (
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
+	github.com/bmatcuk/doublestar/v4 v4.6.1 // indirect
 	github.com/cheggaaa/pb/v3 v3.1.4 // indirect
 	github.com/cloudflare/circl v1.3.7 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.4 // indirect
@@ -45,7 +46,7 @@ require (
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.5.0 // indirect
-	github.com/go-git/go-git/v5 v5.11.0 // indirect
+	github.com/go-git/go-git/v5 v5.12.0 // indirect
 	github.com/go-test/deep v1.0.7 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
@@ -62,7 +63,7 @@ require (
 	github.com/hashicorp/go-plugin v1.6.0 // indirect
 	github.com/hashicorp/go-uuid v1.0.3 // indirect
 	github.com/hashicorp/go-version v1.6.0 // indirect
-	github.com/hashicorp/hc-install v0.6.3 // indirect
+	github.com/hashicorp/hc-install v0.6.4 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hashicorp/hcl/v2 v2.19.1 // indirect
 	github.com/hashicorp/logutils v1.0.0 // indirect
@@ -96,12 +97,11 @@ require (
 	github.com/princjef/mageutil v1.0.0 // indirect
 	github.com/princjef/termdiff v0.1.0 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
-	github.com/russross/blackfriday v1.6.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
-	github.com/sergi/go-diff v1.3.1 // indirect
+	github.com/sergi/go-diff v1.3.2-0.20230802210424-5b0b94c5c0d3 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
-	github.com/skeema/knownhosts v1.2.1 // indirect
+	github.com/skeema/knownhosts v1.2.2 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/cast v1.5.1 // indirect
 	github.com/spf13/cobra v1.7.0 // indirect
@@ -114,12 +114,13 @@ require (
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
-	github.com/yuin/goldmark v1.6.0 // indirect
+	github.com/yuin/goldmark v1.7.0 // indirect
 	github.com/yuin/goldmark-meta v1.1.0 // indirect
-	github.com/zclconf/go-cty v1.14.2 // indirect
+	github.com/zclconf/go-cty v1.14.4 // indirect
+	go.abhg.dev/goldmark/frontmatter v0.2.0 // indirect
 	golang.org/x/crypto v0.21.0 // indirect
 	golang.org/x/exp v0.0.0-20240103183307-be819d1f06fc // indirect
-	golang.org/x/mod v0.15.0 // indirect
+	golang.org/x/mod v0.16.0 // indirect
 	golang.org/x/net v0.23.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect
