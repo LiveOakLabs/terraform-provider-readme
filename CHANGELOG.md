@@ -1,5 +1,28 @@
 # Changelog
 
+## v0.4.0 - 2024-08-02
+
+### Features
+
+- Update a doc's slug using frontmatter @joshbeard (#147)
+
+### Bug Fixes
+
+- Doc slug fixes; API specs data source versions fix @joshbeard (#147)
+
+### Maintenance
+
+- Dependency Updates - Improves error output via readme-api-go-client update @joshbeard (#148)
+- build(deps): bump github.com/liveoaklabs/readme-api-go-client from 0.2.2 to 0.2.3 @dependabot (#143)
+- build(deps): bump github.com/hashicorp/terraform-plugin-docs from 0.18.0 to 0.19.4 @dependabot (#141)
+- build(deps): bump goreleaser/goreleaser-action from 5.0.0 to 6.0.0 @dependabot (#139)
+- build(deps): bump golang.org/x/vuln from 1.0.4 to 1.1.2 @dependabot (#142)
+- build(deps): bump github.com/hashicorp/terraform-plugin-framework from 1.7.0 to 1.9.0 @dependabot (#140)
+- build(deps): bump github.com/hashicorp/terraform-plugin-sdk/v2 from 2.33.0 to 2.34.0 @dependabot (#136)
+- build(deps): bump securego/gosec from 2.19.0 to 2.20.0 @dependabot (#135)
+- build(deps): bump github.com/hashicorp/terraform-plugin-go from 0.22.1 to 0.23.0 @dependabot (#133)
+- build(deps): bump actions/setup-go from 5.0.0 to 5.0.1 @dependabot (#131)
+
 ## v0.3.3 - 2024-04-04
 
 ### Bug Fixes
