@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -74,11 +75,14 @@ func docModelValue(ctx context.Context, doc readme.Doc, model docModel) docModel
 		model.ParentDocSlug = types.StringValue("")
 	}
 
+	bodyClean := strings.TrimSpace(doc.Body)
+	bodyClean = strings.ReplaceAll(bodyClean, `\n`, "\n")
+
 	return docModel{
 		Algolia:         docModelAlgoliaValue(doc.Algolia),
 		API:             docModelAPIValue(doc.API),
 		Body:            model.Body,
-		BodyClean:       types.StringValue(doc.Body),
+		BodyClean:       types.StringValue(bodyClean),
 		BodyHTML:        types.StringValue(doc.BodyHTML),
 		Category:        types.StringValue(doc.Category),
 		CategorySlug:    model.CategorySlug,

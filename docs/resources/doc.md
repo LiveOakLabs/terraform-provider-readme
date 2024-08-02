@@ -3,21 +3,36 @@
 page_title: "readme_doc Resource - readme"
 subcategory: ""
 description: |-
-  Manage docs on ReadMe.com
-  Docs on ReadMe support setting some attributes using front matter. Resource attributes take precedence over front matter attributes in the provider.
+  Manage docs on ReadMe.com Docs on ReadMe support setting some attributes using front matter.  Resource attributes take precedence over front matter attributes in  the provider.
   Refer to https://docs.readme.com/main/docs/rdme for more information about using front matter in ReadMe docs and custom pages.
   See https://docs.readme.com/main/reference/getdoc for more information about this API endpoint.
+  Doc Slugs
+  Docs in ReadMe are uniquely identified by their slugs. The slug is a URL-friendly string that is generated upon doc creation. By default, this is a normalized version of the doc title. The slug cannot be altered using the API or the Terraform Provider, but can be edited in the ReadMe web UI.
+  This creates challenges when managing docs with Terraform. To address this, the provider supports the use_slug attribute. When set, the provider will attempt to manage an existing doc by its slug. This can also be set in front matter using the slug key.
+  If this attribute is set and the doc does not exist, an error will be returned. This is intended to be set when inheriting management of an existing doc or when customizing the slug after the doc has been created.
+  Note that doc slugs are shared between Guides and API Specification References.
+  The use_slug attribute is expierimental and may result in unexpected behavior.
 ---
 
 # readme_doc (Resource)
 
-Manage docs on ReadMe.com
+Manage docs on ReadMe.com Docs on ReadMe support setting some attributes using front matter.  Resource attributes take precedence over front matter attributes in  the provider. 
 
-Docs on ReadMe support setting some attributes using front matter. Resource attributes take precedence over front matter attributes in the provider.
+ Refer to <https://docs.readme.com/main/docs/rdme> for more information about using front matter in ReadMe docs and custom pages. 
 
-Refer to <https://docs.readme.com/main/docs/rdme> for more information about using front matter in ReadMe docs and custom pages.
+ See <https://docs.readme.com/main/reference/getdoc> for more information about this API endpoint. 
 
-See <https://docs.readme.com/main/reference/getdoc> for more information about this API endpoint.
+ ## Doc Slugs 
+
+ Docs in ReadMe are uniquely identified by their slugs. The slug is a URL-friendly string that is generated upon doc creation. By default, this is a normalized version of the doc title. The slug cannot be altered using the API or the Terraform Provider, but can be edited in the ReadMe web UI. 
+
+ This creates challenges when managing docs with Terraform. To address this, the provider supports the `use_slug` attribute. When set, the provider will attempt to manage an existing doc by its slug. This can also be set in front matter using the `slug` key. 
+
+ If this attribute is set and the doc does not exist, an error will be returned. This is intended to be set when inheriting management of an existing doc or when customizing the slug *after* the doc has been created. 
+
+ Note that doc slugs are shared between Guides and API Specification References. 
+
+ **The `use_slug` attribute is expierimental and may result in unexpected behavior.**
 
 ## Example Usage
 
@@ -73,8 +88,12 @@ resource "readme_doc" "example" {
 - `parent_doc` (String) For a subpage, specify the parent doc ID.This attribute may be set in the body front matter with the `parentDoc` key.The provider cannot verify that a `parent_doc` exists if it is hidden. To use a `parent_doc` ID without verifying, set the `verify_parent_doc` attribute to `false`.
 - `parent_doc_slug` (String) For a subpage, specify the parent doc slug instead of the ID.This attribute may be set in the body front matter with the `parentDocSlug` key.If a value isn't specified but `parent_doc` is, the provider will attempt to populate this value using the `parent_doc` ID unless `verify_parent_doc` is set to `false`.
 - `title` (String) **Required.** The title of the doc.This attribute may optionally be set in the body front matter.
-- `type` (String) **Required.** Type of the doc. The available types all show up under the /docs/ URL path of your docs project (also known as the "guides" section). Can be "basic" (most common), "error" (page desribing an API error), or "link" (page that redirects to an external link).This attribute may optionally be set in the body front matter.
-- `use_slug` (String) **Use with caution!** Create the doc resource by importing an existing doc by its slug. This is non-conventional and should only be used when the slug is known and the doc is not managed by Terraform. This is useful for managing an API specification's doc that gets created automatically by ReadMe. When set, the specified doc will be replaced with the Terraform-managed doc. Changing the value will trigger a re-creation of the doc. If this is set and then unset, a new doc will be created but the existing doc will not be deleted. The existing doc will be orphaned and will not be managed by Terraform. If this is unset and then set, the existing doc will be deleted and the resource will be pointed to the specified doc. In the case of API specification docs, the doc is implicitly deleted when the API specification is deleted.
+- `type` (String) **Required.** Type of the doc. The available types all show up under the /docs/ URL path of your docs project (also known as the "guides" section). Can be "basic" (most common), "error" (page describing an API error), or "link" (page that redirects to an external link).This attribute may optionally be set in the body front matter.
+- `use_slug` (String) **Use with caution!** Create the doc resource by importing an existing doc by its slug. This is non-conventional and should only be used when the slug is known and the doc is not managed by Terraform or when the slug is changed in the web UI. This is useful for managing an API specification's doc that gets created automatically by ReadMe. When set, the specified doc will be replaced with the Terraform-managed doc.
+
+If this is set and then unset, a new doc will be created but the existing doc will not be deleted. The existing doc will be orphaned and will not be managed by Terraform. If this is unset and then set, the existing doc will be deleted and the resource will be pointed to the specified doc. In the case of API specification docs, the doc is implicitly deleted when the API specification is deleted.
+
+This attribute may be set in the body front matter with the `slug` key.
 - `verify_parent_doc` (Boolean) Enables or disables the provider verifying the `parent_doc` exists. When using the `parent_doc` attribute with a hidden parent, the provider is unable to verify if the parent exists. Setting this to `false` will disable this behavior. When `false`, the `parent_doc_slug` value will not be resolved by the provider unless explicitly set. The `parent_doc_slug` attribute may be used as an alternative. Verifying a `parent_doc` by ID does not work if the parent is hidden.
 - `version` (String) The version to create the doc under.
 

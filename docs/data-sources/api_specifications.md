@@ -91,7 +91,7 @@ Optional:
 - `category_title` (List of String) Return API specifications matching the specified category titles.
 - `has_category` (Boolean) Return only API specifications with a category. This attribute works as an 'AND' filter with the other category filters.
 - `title` (List of String) Return API specifications matching the specified title.
-- `version` (List of String) Return API specifications matching the specified version ID.
+- `version` (List of String) Return API specifications matching the specified versions (e.g. 1.0.0).
 
 
 <a id="nestedatt--specs"></a>
@@ -105,7 +105,7 @@ Read-Only:
 - `source` (String) The creation source of the API specification.
 - `title` (String) The title of the API specification derived from the specification JSON.
 - `type` (String) The type of the API specification.
-- `version` (String) The version of the API specification.
+- `version` (String) The version ID of the API specification.
 
 <a id="nestedatt--specs--category"></a>
 ### Nested Schema for `specs.category`

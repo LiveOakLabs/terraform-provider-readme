@@ -27,6 +27,7 @@ type ReadmeFrontMatter struct {
 	Order         int64                 `yaml:"order,omitempty"`         // docs
 	ParentDoc     string                `yaml:"parentDoc,omitempty"`     // docs
 	ParentDocSlug string                `yaml:"parentDocSlug,omitempty"` // docs
+	Slug          string                `yaml:"slug,omitempty"`          // docs
 	Title         string                `yaml:"title,omitempty"`         // changelogs, custom pages, docs
 	Type          string                `yaml:"type,omitempty"`          // changelogs, docs
 }
