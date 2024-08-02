@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/liveoaklabs/readme-api-go-client/readme"
 )
@@ -126,7 +127,7 @@ func (d *apiSpecificationsDataSource) Schema(
 						ElementType: types.StringType,
 					},
 					"version": schema.ListAttribute{
-						Description: "Return API specifications matching the specified version ID.",
+						Description: "Return API specifications matching the specified versions (e.g. 1.0.0).",
 						Optional:    true,
 						ElementType: types.StringType,
 					},
@@ -173,7 +174,7 @@ func (d *apiSpecificationsDataSource) Schema(
 							Computed:    true,
 						},
 						"version": schema.StringAttribute{
-							Description: "The version of the API specification.",
+							Description: "The version ID of the API specification.",
 							Computed:    true,
 						},
 					},
@@ -208,15 +209,37 @@ func (d *apiSpecificationsDataSource) Read(
 		return
 	}
 
-	// Get all API specifications.
-	apiSpecs, apiResponse, err := d.client.APISpecification.GetAll()
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to retrieve API specifications.",
-			clientError(err, apiResponse),
-		)
+	// If any versions are specified, iterate over each one and set the request
+	// options to get the API specifications for each version.
+	// If no versions are specified, set the request options to get all API
+	// specifications.
+	var wantVersions []basetypes.StringValue
+	if state.Filter != nil {
+		wantVersions = state.Filter.Version
+	}
 
-		return
+	gotVersions := []readme.RequestOptions{}
+	if len(wantVersions) == 0 {
+		gotVersions = append(gotVersions, readme.RequestOptions{})
+	} else {
+		for _, version := range wantVersions {
+			gotVersions = append(gotVersions, readme.RequestOptions{Version: version.ValueString()})
+		}
+	}
+
+	var apiSpecs []readme.APISpecification
+	for _, versionFilter := range gotVersions {
+		// Get all API specifications.
+		tflog.Info(ctx, fmt.Sprintf("Getting API specifications with request options: %v", versionFilter))
+		apiSpecs, apiResponse, err = d.client.APISpecification.GetAll(versionFilter)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Unable to retrieve API specifications.",
+				clientError(err, apiResponse),
+			)
+
+			return
+		}
 	}
 
 	// Optionally sort API specifications.
@@ -309,7 +332,6 @@ func specMatchesMultiFilters(
 
 	// If has_category but none of the other filters are specified, return true.
 	if filter.Title == nil &&
-		filter.Version == nil &&
 		filter.CategoryID == nil &&
 		filter.CategorySlug == nil &&
 		filter.CategoryTitle == nil {
@@ -321,15 +343,6 @@ func specMatchesMultiFilters(
 	for _, title := range filter.Title {
 		if spec.Title == title.ValueString() {
 			tflog.Info(ctx, fmt.Sprintf("API specification %s matched title filter.", spec.Title))
-
-			return true
-		}
-	}
-
-	// Filter by spec version.
-	for _, version := range filter.Version {
-		if spec.Version == version.ValueString() {
-			tflog.Info(ctx, fmt.Sprintf("API specification %s matched version filter.", spec.Version))
 
 			return true
 		}

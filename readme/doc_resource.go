@@ -130,6 +130,7 @@ func (r *docResource) ModifyPlan(
 	}
 
 	if state == nil {
+		tflog.Info(ctx, fmt.Sprintf("state is nil for doc %s", plan.Slug.ValueString()))
 		plan.BodyClean = types.StringUnknown()
 		plan.BodyHTML = types.StringUnknown()
 		plan.Revision = types.Int64Unknown()
@@ -140,12 +141,6 @@ func (r *docResource) ModifyPlan(
 
 		return
 	}
-
-	body := strings.TrimSpace(plan.Body.ValueString())
-
-	// Expand newline escape sequences.
-	body = strings.ReplaceAll(body, `\n`, "\n")
-	plan.BodyClean = types.StringValue(body)
 
 	diags := resp.Plan.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
@@ -165,6 +160,8 @@ func (r *docResource) ModifyPlan(
 		!state.Slug.Equal(plan.Slug) ||
 		!state.Title.Equal(plan.Title) ||
 		!state.Type.Equal(plan.Type) {
+
+		tflog.Info(ctx, fmt.Sprintf("setting volatile attributes to unknown for doc %s", plan.Slug.ValueString()))
 
 		plan.Revision = types.Int64Unknown()
 		plan.UpdatedAt = types.StringUnknown()
@@ -242,7 +239,35 @@ func (r *docResource) Create(
 		}
 	}
 
-	if plan.UseSlug.IsNull() {
+	useSlug := plan.UseSlug.ValueString() != "" && plan.UseSlug.ValueString() != "null"
+	exists := false
+	if useSlug {
+		exists, err = r.docExists(ctx, plan.UseSlug.ValueString(), requestOpts)
+		if err != nil {
+			resp.Diagnostics.AddError("Unable to create doc.", clientError(err, apiResponse))
+
+			return
+		}
+	}
+
+	if exists {
+		// Adopt the doc.
+		adopted, err := r.adoptDoc(ctx, plan, requestOpts)
+		if err != nil {
+			hint := fmt.Sprintf("\nHint: A value for the `use_slug` attribute is set to '%s', "+
+				"but the doc could not be found. Ensure the doc exists and the slug is correct. "+
+				"Otherwise, remove the `use_slug` attribute.", plan.UseSlug.ValueString())
+			resp.Diagnostics.AddError("Unable to create doc.", "Error: "+err.Error()+hint)
+
+			return
+		}
+		if adopted == nil {
+			resp.Diagnostics.AddError("Unable to create doc.", "adopted doc is nil after successful adoption.")
+
+			return
+		}
+		doc = *adopted
+	} else {
 		// Create the doc.
 		doc, apiResponse, err = r.client.Doc.Create(docPlanToParams(ctx, plan), requestOpts)
 		if err != nil {
@@ -250,20 +275,6 @@ func (r *docResource) Create(
 
 			return
 		}
-	} else {
-		// Adopt the doc.
-		adopted, err := r.adoptDoc(ctx, plan, requestOpts)
-		if err != nil {
-			resp.Diagnostics.AddError("Unable to create doc.", err.Error())
-
-			return
-		}
-		if adopted == nil {
-			resp.Diagnostics.AddError("Unable to create doc.", "adopted doc is nil")
-
-			return
-		}
-		doc = *adopted
 	}
 
 	// Get the doc.
@@ -289,6 +300,10 @@ func (r *docResource) Create(
 	}
 
 	// Set state to fully populated data.
+	if state.UseSlug.ValueString() == "" || state.UseSlug.ValueString() == "null" {
+		state.UseSlug = types.StringValue(state.Slug.ValueString())
+	}
+
 	diags = resp.State.Set(ctx, state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -297,6 +312,19 @@ func (r *docResource) Create(
 
 		return
 	}
+}
+
+func (r *docResource) docExists(
+	ctx context.Context,
+	slug string,
+	options readme.RequestOptions,
+) (bool, error) {
+	_, _, err := r.client.Doc.Get(slug, options)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
 }
 
 // adoptDoc attempts to retrieve a doc by its slug and update it with the plan attributes.
@@ -310,18 +338,18 @@ func (r *docResource) adoptDoc(
 	tflog.Info(ctx, fmt.Sprintf("using slug %s", slug))
 	existing, _, err := getDoc(r.client, ctx, slug, plan, requestOpts)
 	if err != nil {
-		return nil, fmt.Errorf("error retrieving doc %s: %w", slug, err)
+		return nil, fmt.Errorf("failed to retrieve doc '%s': %w", slug, err)
 	}
 
 	if existing.Slug.ValueString() == "" {
-		return nil, fmt.Errorf("doc %s not found", slug)
+		return nil, fmt.Errorf("doc '%s' not found", slug)
 	}
 
 	// Update the existing doc.
 	tflog.Info(ctx, fmt.Sprintf("updating doc %s", slug))
 	doc, _, err := r.client.Doc.Update(slug, docPlanToParams(ctx, plan), requestOpts)
 	if err != nil {
-		return nil, fmt.Errorf("error updating doc %s: %w", slug, err)
+		return nil, fmt.Errorf("failed to update doc '%s': %w", slug, err)
 	}
 
 	return &doc, nil
@@ -341,10 +369,6 @@ func (r *docResource) Read(
 		return
 	}
 
-	requestOpts := apiRequestOptions(state.Version)
-	logMsg := fmt.Sprintf("retrieving doc %s with request options=%+v", state.Slug.ValueString(), requestOpts)
-	tflog.Info(ctx, logMsg)
-
 	slug := state.Slug.ValueString()
 	stateID := state.ID.ValueString()
 
@@ -352,6 +376,10 @@ func (r *docResource) Read(
 		tflog.Info(ctx, fmt.Sprintf("use_slug is set to %s.", state.UseSlug.ValueString()))
 		slug = state.UseSlug.ValueString()
 	}
+
+	requestOpts := apiRequestOptions(state.Version)
+	logMsg := fmt.Sprintf("retrieving doc %s with request options=%+v", slug, requestOpts)
+	tflog.Info(ctx, logMsg)
 
 	// Get the doc.
 	state, apiResponse, err := getDoc(r.client, ctx, slug, state, requestOpts)
@@ -374,7 +402,9 @@ func (r *docResource) Read(
 
 					return
 				}
-				resp.Diagnostics.AddError("Unable to search for doc.", clientError(err, apiResponse))
+				hint := "Hint: If you changed the doc slug using the web UI, set the `use_slug` " +
+					"attribute or the `slug` frontmatter key to the new slug.\n"
+				resp.Diagnostics.AddError("Unable to search for doc.", hint+clientError(err, apiResponse))
 
 				return
 			}
@@ -413,7 +443,6 @@ func (r *docResource) Update(
 	}
 
 	requestOpts := apiRequestOptions(plan.Version)
-	tflog.Info(ctx, fmt.Sprintf("updating doc with request options=%+v", requestOpts))
 
 	// If a parent doc is set, verify that it exists.
 	if plan.VerifyParentDoc.IsNull() || plan.VerifyParentDoc.ValueBool() {
@@ -430,6 +459,8 @@ func (r *docResource) Update(
 		tflog.Info(ctx, fmt.Sprintf("use_slug is set to %s.", state.UseSlug.ValueString()))
 		slug = state.UseSlug.ValueString()
 	}
+
+	tflog.Info(ctx, fmt.Sprintf("updating doc %s with request options=%+v", slug, requestOpts))
 
 	// Update the doc.
 	params := docPlanToParams(ctx, plan)
@@ -470,6 +501,11 @@ func (r *docResource) Update(
 		return
 	}
 
+	// Set state to fully populated data.
+	if plan.UseSlug.ValueString() == "" || plan.UseSlug.ValueString() == "null" {
+		plan.UseSlug = types.StringValue(plan.Slug.ValueString())
+	}
+
 	// Set refreshed state.
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 	if resp.Diagnostics.HasError() {
@@ -487,14 +523,6 @@ func (r *docResource) Delete(
 	var state docModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if !state.UseSlug.IsNull() {
-		tflog.Info(ctx, fmt.Sprintf("use_slug is set to %s. Doc will not be "+
-			"deleted remotely but will be removed from state.", state.UseSlug.ValueString()))
-		resp.State.RemoveResource(ctx)
-
 		return
 	}
 
@@ -560,12 +588,36 @@ func (r *docResource) Schema(
 	resp *resource.SchemaResponse,
 ) {
 	resp.Schema = schema.Schema{
-		Description: "Manage docs on ReadMe.com\n\n" +
-			"Docs on ReadMe support setting some attributes using front matter. " +
-			"Resource attributes take precedence over front matter attributes in the provider.\n\n" +
-			"Refer to <https://docs.readme.com/main/docs/rdme> for more information about using front matter in " +
-			"ReadMe docs and custom pages.\n\n" +
+		Description: strings.Join([]string{
+			"Manage docs on ReadMe.com",
+			"Docs on ReadMe support setting some attributes using front matter. ",
+			"Resource attributes take precedence over front matter attributes in ",
+			"the provider.",
+			"\n\n",
+			"Refer to <https://docs.readme.com/main/docs/rdme> for more information",
+			"about using front matter in ReadMe docs and custom pages.",
+			"\n\n",
 			"See <https://docs.readme.com/main/reference/getdoc> for more information about this API endpoint.",
+			"\n\n",
+			"## Doc Slugs",
+			"\n\n",
+			"Docs in ReadMe are uniquely identified by their slugs. The slug is a URL-friendly string that",
+			"is generated upon doc creation. By default, this is a normalized version of the doc title.",
+			"The slug cannot be altered using the API or the Terraform Provider, but can be edited in the",
+			"ReadMe web UI.",
+			"\n\n",
+			"This creates challenges when managing docs with Terraform. To address this, the provider",
+			"supports the `use_slug` attribute. When set, the provider will attempt to manage an existing",
+			"doc by its slug. This can also be set in front matter using the `slug` key.",
+			"\n\n",
+			"If this attribute is set and the doc does not exist, an error will be returned. This is intended",
+			"to be set when inheriting management of an existing doc or when customizing the slug *after*",
+			"the doc has been created.",
+			"\n\n",
+			"Note that doc slugs are shared between Guides and API Specification References.",
+			"\n\n",
+			"**The `use_slug` attribute is expierimental and may result in unexpected behavior.**",
+		}, " "),
 		Attributes: map[string]schema.Attribute{
 			"algolia": schema.SingleNestedAttribute{
 				Description: "Metadata about the Algolia search integration. " +
@@ -910,7 +962,7 @@ func (r *docResource) Schema(
 			"type": schema.StringAttribute{
 				Description: `**Required.** Type of the doc. The available types all show up under the /docs/ URL ` +
 					`path of your docs project (also known as the "guides" section). Can be "basic" (most common), ` +
-					`"error" (page desribing an API error), or "link" (page that redirects to an external link).` +
+					`"error" (page describing an API error), or "link" (page that redirects to an external link).` +
 					"This attribute may optionally be set in the body front matter.",
 				Computed: true,
 				Optional: true,
@@ -929,19 +981,21 @@ func (r *docResource) Schema(
 			"use_slug": schema.StringAttribute{
 				Description: "**Use with caution!** Create the doc resource by importing an existing doc by its slug. " +
 					"This is non-conventional and should only be used when the slug is known and " +
-					"the doc is not managed by Terraform. " +
+					"the doc is not managed by Terraform or when the slug is changed in the web UI. " +
 					"This is useful for managing an API specification's doc that gets created " +
 					"automatically by ReadMe. When set, the specified doc will be replaced " +
-					"with the Terraform-managed doc. Changing the value will trigger a re-creation of the doc. " +
+					"with the Terraform-managed doc.\n\n" +
 					"If this is set and then unset, a new doc will be created but the existing doc will not be " +
 					"deleted. The existing doc will be orphaned and will not be managed by Terraform. " +
 					"If this is unset and then set, the existing doc will be deleted and the resource will be " +
 					"pointed to the specified doc. " +
 					"In the case of API specification docs, the doc is implicitly deleted when the " +
-					"API specification is deleted.",
+					"API specification is deleted.\n\n" +
+					"This attribute may be set in the body front matter with the `slug` key.",
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					frontmatter.GetString("Slug"),
 				},
 			},
 			"version": schema.StringAttribute{
