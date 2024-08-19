@@ -2,7 +2,7 @@ module github.com/liveoaklabs/terraform-provider-readme
 
 go 1.22
 
-require github.com/liveoaklabs/readme-api-go-client v0.3.0
+require github.com/liveoaklabs/readme-api-go-client v0.4.0
 
 require (
 	github.com/adrg/frontmatter v0.2.0
