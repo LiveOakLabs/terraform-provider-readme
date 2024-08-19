@@ -16,7 +16,7 @@ require (
 	github.com/segmentio/golines v0.12.2
 	golang.org/x/vuln v1.1.3
 	gopkg.in/h2non/gock.v1 v1.1.2
-	mvdan.cc/gofumpt v0.6.0
+	mvdan.cc/gofumpt v0.7.0
 )
 
 require (
