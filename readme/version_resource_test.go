@@ -29,7 +29,7 @@ func TestVersionResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Test creating a version.
 			{
-				Config: providerConfig + `resource "readme_version" "test" {
+				Config: testProviderConfig + `resource "readme_version" "test" {
 					from      = "1.0.0"
 					version   = "` + mockVersion.Version + `"
 					codename  = "` + mockVersion.Codename + `"
@@ -115,7 +115,7 @@ func TestVersionResource(t *testing.T) {
 			},
 			// Test updating the codename.
 			{
-				Config: providerConfig + `resource "readme_version" "test" {
+				Config: testProviderConfig + `resource "readme_version" "test" {
 					from     = "1.0.0"
 					version  = "` + mockUpdatedVersion.Version + `"
 					codename = "` + mockUpdatedVersion.Codename + `"
@@ -170,7 +170,7 @@ func TestVersionResource(t *testing.T) {
 			},
 			// When is_stable gets updated, the resource will be re-created.
 			{
-				Config: providerConfig + `resource "readme_version" "test" {
+				Config: testProviderConfig + `resource "readme_version" "test" {
 						from     = "1.0.0"
 						version  = "` + mockUpdatedVersion.Version + `"
 						codename = "` + mockUpdatedVersion.Codename + `"
@@ -238,7 +238,7 @@ func TestVersionsResource_Error(t *testing.T) {
 						Reply(400).
 						JSON(expectCreateResponse)
 				},
-				Config: providerConfig + `resource "readme_version" "test" {
+				Config: testProviderConfig + `resource "readme_version" "test" {
 					from    = "1.0.0"
 					version = "` + mockVersion.Version + `"
 					codename = "` + mockVersion.Codename + `"
@@ -286,7 +286,7 @@ func TestVersionsResource_AttributeError(t *testing.T) {
 			ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 			Steps: []resource.TestStep{
 				{
-					Config:      providerConfig + testCase.Config,
+					Config:      testProviderConfig + testCase.Config,
 					ExpectError: expectError,
 				},
 			},

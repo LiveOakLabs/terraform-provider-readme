@@ -27,7 +27,7 @@ func TestDocSearchDataSource(t *testing.T) {
 						Reply(200).
 						JSON(mockDocSearchResponse)
 				},
-				Config: providerConfig + `
+				Config: testProviderConfig + `
 					data "readme_doc_search" "test" {
 						query = "*"
 					}

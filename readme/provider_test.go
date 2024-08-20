@@ -25,9 +25,9 @@ const (
 	// testToken is a dummy token the provider is configured with and used
 	// throughout tests.
 	testToken = "hunter2"
-	// providerConfig is a shared configuration that sets a mock url and token.
+	// testProviderConfig is a shared configuration that sets a mock url and token.
 	// The URL points to our gock mock server.
-	providerConfig = (`
+	testProviderConfig = (`
 		provider "readme" {
 			api_token = "` + testToken + `"
 			api_url   = "` + testURL + `"

@@ -3,36 +3,98 @@
 page_title: "readme_doc Resource - readme"
 subcategory: ""
 description: |-
-  Manage docs on ReadMe.com Docs on ReadMe support setting some attributes using front matter.  Resource attributes take precedence over front matter attributes in  the provider.
-  Refer to https://docs.readme.com/main/docs/rdme for more information about using front matter in ReadMe docs and custom pages.
+  Manage docs on ReadMe.com
   See https://docs.readme.com/main/reference/getdoc for more information about this API endpoint.
+  Front Matter
+  Docs on ReadMe support setting some attributes using front matter.
+  Resource attributes take precedence over front matter attributes in the provider.
+  Refer to https://docs.readme.com/main/docs/rdme for more information about using front matter
+  in ReadMe docs and custom pages.
   Doc Slugs
-  Docs in ReadMe are uniquely identified by their slugs. The slug is a URL-friendly string that is generated upon doc creation. By default, this is a normalized version of the doc title. The slug cannot be altered using the API or the Terraform Provider, but can be edited in the ReadMe web UI.
-  This creates challenges when managing docs with Terraform. To address this, the provider supports the use_slug attribute. When set, the provider will attempt to manage an existing doc by its slug. This can also be set in front matter using the slug key.
-  If this attribute is set and the doc does not exist, an error will be returned. This is intended to be set when inheriting management of an existing doc or when customizing the slug after the doc has been created.
+  Docs in ReadMe are uniquely identified by their slugs. The slug is a URL-friendly string that
+  is generated upon doc creation. By default, this is a normalized version of the doc title.
+  The slug cannot be altered using the API or the Terraform Provider, but can be edited in the
+  ReadMe web UI.
+  This creates challenges when managing docs with Terraform. To address this, the provider supports
+  the use_slug attribute. When set, the provider will attempt to manage an existing
+  doc by its slug. This can also be set in front matter using the slug key.
+  If this attribute is set and the doc does not exist, an error will be returned. This is intended
+  to be set when inheriting management of an existing doc or when customizing the slug after
+  the doc has been created.
   Note that doc slugs are shared between Guides and API Specification References.
-  The use_slug attribute is expierimental and may result in unexpected behavior.
+  ⚠️ Experimental: The 'use_slug' attribute is experimental and may result in unexpected behavior.
+  Destroying Docs with Children
+  Docs in ReadMe can have child docs.
+  Terraform can infer a doc's relationship when they are all managed by the provider and delete them
+  in the proper order as normal when referenced appropriately or when using depends_on.
+  However, when managing docs with children, the provider may not be able to infer the relationship
+  between parent and child docs, particularly in edge cases such as using the use_slug attribute
+  to manage an API reference's parent doc.
+  When destroying a doc, the provider will check for child docs and prevent deletion if they exist.
+  This behavior can be controlled with the config.destroy_child_docs attribute. When set to true,
+  the provider will destroy child docs prior to deleting the parent doc. Setting this as a provider
+  configuration attribute allows for it to be toggled without requiring changes to the resource.
+  When 'config.destroy_child_docs' is set to true, the provider will log a warning when child docs are
+  deleted before the parent doc.
+  For best results, manage docs with Terraform and set their relationship by referencing the resource
+  address of the parent doc in the child doc's parent_doc_slug or depends_on attributes. This
+  ensures they are deleted in the correct order.
 ---
 
 # readme_doc (Resource)
 
-Manage docs on ReadMe.com Docs on ReadMe support setting some attributes using front matter.  Resource attributes take precedence over front matter attributes in  the provider. 
+Manage docs on ReadMe.com
 
- Refer to <https://docs.readme.com/main/docs/rdme> for more information about using front matter in ReadMe docs and custom pages. 
+See <https://docs.readme.com/main/reference/getdoc> for more information about this API endpoint.
 
- See <https://docs.readme.com/main/reference/getdoc> for more information about this API endpoint. 
+## Front Matter
 
- ## Doc Slugs 
+Docs on ReadMe support setting some attributes using front matter. 
+Resource attributes take precedence over front matter attributes in the provider.
 
- Docs in ReadMe are uniquely identified by their slugs. The slug is a URL-friendly string that is generated upon doc creation. By default, this is a normalized version of the doc title. The slug cannot be altered using the API or the Terraform Provider, but can be edited in the ReadMe web UI. 
+Refer to <https://docs.readme.com/main/docs/rdme> for more information about using front matter 
+in ReadMe docs and custom pages.
 
- This creates challenges when managing docs with Terraform. To address this, the provider supports the `use_slug` attribute. When set, the provider will attempt to manage an existing doc by its slug. This can also be set in front matter using the `slug` key. 
+## Doc Slugs
 
- If this attribute is set and the doc does not exist, an error will be returned. This is intended to be set when inheriting management of an existing doc or when customizing the slug *after* the doc has been created. 
+Docs in ReadMe are uniquely identified by their slugs. The slug is a URL-friendly string that 
+is generated upon doc creation. By default, this is a normalized version of the doc title. 
+The slug cannot be altered using the API or the Terraform Provider, but can be edited in the 
+ReadMe web UI.
 
- Note that doc slugs are shared between Guides and API Specification References. 
+This creates challenges when managing docs with Terraform. To address this, the provider supports 
+the **use_slug** attribute. When set, the provider will attempt to manage an existing 
+doc by its slug. This can also be set in front matter using the **slug** key.
 
- **The `use_slug` attribute is expierimental and may result in unexpected behavior.**
+If this attribute is set and the doc does not exist, an error will be returned. This is intended 
+to be set when inheriting management of an existing doc or when customizing the slug *after* 
+the doc has been created.
+
+Note that doc slugs are shared between Guides and API Specification References.
+
+⚠️ **Experimental:** The 'use_slug' attribute is experimental and may result in unexpected behavior.
+
+## Destroying Docs with Children
+
+Docs in ReadMe can have child docs. 
+Terraform can infer a doc's relationship when they are all managed by the provider and delete them
+in the proper order as normal when referenced appropriately or when using **depends_on**.
+
+However, when managing docs with children, the provider may not be able to infer the relationship
+between parent and child docs, particularly in edge cases such as using the **use_slug** attribute
+to manage an API reference's parent doc.
+
+When destroying a doc, the provider will check for child docs and prevent deletion if they exist.
+This behavior can be controlled with the **config.destroy_child_docs** attribute. When set to true,
+the provider will destroy child docs prior to deleting the parent doc. Setting this as a provider
+configuration attribute allows for it to be toggled without requiring changes to the resource.
+
+When 'config.destroy_child_docs' is set to true, the provider will log a warning when child docs are
+deleted before the parent doc.
+
+For best results, manage docs with Terraform and set their relationship by referencing the resource
+address of the parent doc in the child doc's **parent_doc_slug** or **depends_on** attributes. This
+ensures they are deleted in the correct order.
 
 ## Example Usage
 

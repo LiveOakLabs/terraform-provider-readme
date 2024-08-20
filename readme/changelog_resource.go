@@ -26,6 +26,7 @@ var (
 // changelogResource is the data source implementation.
 type changelogResource struct {
 	client *readme.Client
+	config providerConfig
 }
 
 // changelogResourceModel is the resource model used by the readme_changelog resource.
@@ -81,7 +82,9 @@ func (r *changelogResource) Configure(_ context.Context, req resource.ConfigureR
 		return
 	}
 
-	r.client = req.ProviderData.(*readme.Client)
+	cfg := req.ProviderData.(*providerData)
+	r.client = cfg.client
+	r.config = cfg.config
 }
 
 // ModifyPlan is used for modifying the plan before it is applied. In particular,

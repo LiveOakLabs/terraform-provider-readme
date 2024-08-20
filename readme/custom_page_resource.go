@@ -25,6 +25,7 @@ var (
 // customPageResource is the data source implementation.
 type customPageResource struct {
 	client *readme.Client
+	config providerConfig
 }
 
 // customPageResourceModel is the resource model used by the readme_custom_page resource.
@@ -70,7 +71,9 @@ func (r *customPageResource) Configure(
 		return
 	}
 
-	r.client = req.ProviderData.(*readme.Client)
+	cfg := req.ProviderData.(*providerData)
+	r.client = cfg.client
+	r.config = cfg.config
 }
 
 // ValidateConfig is used for validating attribute values.

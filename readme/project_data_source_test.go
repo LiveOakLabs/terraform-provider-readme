@@ -31,7 +31,7 @@ func TestProjectDataSource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Read testing
 			{
-				Config: providerConfig + tfConfig,
+				Config: testProviderConfig + tfConfig,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Verify the project response is returned with the data source.
 					resource.TestCheckResourceAttr(
@@ -83,7 +83,7 @@ func TestProjectDataSource_GetError(t *testing.T) {
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: providerConfig + `data "readme_project" "test" {}`,
+				Config: testProviderConfig + `data "readme_project" "test" {}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Verify the project response is returned with the data source.
 					resource.TestCheckResourceAttr(

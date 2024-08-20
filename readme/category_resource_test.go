@@ -84,7 +84,7 @@ var categoryCreateChecks = resource.ComposeAggregateTestCheckFunc(
 // for no checks.
 func createCategoryTestStep(check resource.TestCheckFunc) resource.TestStep {
 	return resource.TestStep{
-		Config: providerConfig + `resource "readme_category" "test" {
+		Config: testProviderConfig + `resource "readme_category" "test" {
 			title = "` + mockCategoryCreate.Title + `"
 			type  = "` + mockCategoryCreate.Type + `"
 		}`,
@@ -129,7 +129,7 @@ func TestCategoryResource(t *testing.T) {
 			createCategoryTestStep(categoryCreateChecks),
 			// Test updating the category.
 			{
-				Config: providerConfig + `resource "readme_category" "test" {
+				Config: testProviderConfig + `resource "readme_category" "test" {
 					title = "My Updated Title"
 					type  = "` + mockCategoryCreate.Type + `"
 				}`,
@@ -220,7 +220,7 @@ func TestCategoryResource_Validation_Error(t *testing.T) {
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: providerConfig + `resource "readme_category" "test" {
+				Config: testProviderConfig + `resource "readme_category" "test" {
 					title = "` + mockCategoryCreate.Title + `"
 					type  = "invalid"
 				}`,
@@ -245,7 +245,7 @@ func TestCategoryResource_ReCreate(t *testing.T) {
 			createCategoryTestStep(categoryCreateChecks),
 			// Re-create when API returns 404 for resource (deleted outside of Terraform).
 			{
-				Config: providerConfig + `resource "readme_category" "test" {
+				Config: testProviderConfig + `resource "readme_category" "test" {
 					title = "` + mockCategoryCreate.Title + `"
 					type  = "` + mockCategoryCreate.Type + `"
 				}`,
@@ -300,7 +300,7 @@ func TestCategoryResource_Create_Error(t *testing.T) {
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: providerConfig + `resource "readme_category" "test" {
+				Config: testProviderConfig + `resource "readme_category" "test" {
 					title = "` + mockCategoryCreate.Title + `"
 					type  = "` + mockCategoryCreate.Type + `"
 				}`,
@@ -330,7 +330,7 @@ func TestCategoryResource_Post_Create_Read_Error(t *testing.T) {
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: providerConfig + `resource "readme_category" "test" {
+				Config: testProviderConfig + `resource "readme_category" "test" {
 					title = "` + mockCategoryCreate.Title + `"
 					type  = "` + mockCategoryCreate.Type + `"
 				}`,
@@ -369,7 +369,7 @@ func TestCategoryResource_Read_Error(t *testing.T) {
 			createCategoryTestStep(nil),
 			// Test when response is 500.
 			{
-				Config: providerConfig + `resource "readme_category" "test" {
+				Config: testProviderConfig + `resource "readme_category" "test" {
 					title = "` + mockCategoryCreate.Title + `_update"
 					type  = "` + mockCategoryCreate.Type + `"
 				}`,
@@ -411,7 +411,7 @@ func TestCategoryResource_Update_Error(t *testing.T) {
 			// Create the category.
 			createCategoryTestStep(nil),
 			{
-				Config: providerConfig + `resource "readme_category" "test" {
+				Config: testProviderConfig + `resource "readme_category" "test" {
 					title = "` + mockCategoryCreate.Title + `_update"
 					type  = "` + mockCategoryCreate.Type + `"
 				}`,
@@ -460,7 +460,7 @@ func TestCategoryResource_Post_Update_Read_Error(t *testing.T) {
 			// Create the category.
 			createCategoryTestStep(nil),
 			{
-				Config: providerConfig + `resource "readme_category" "test" {
+				Config: testProviderConfig + `resource "readme_category" "test" {
 					title = "` + mockCategoryCreate.Title + ` update"
 					type  = "` + mockCategoryCreate.Type + `"
 				}`,
@@ -518,7 +518,7 @@ func TestCategoryResource_Delete_Error(t *testing.T) {
 				// This is a destroy test.
 				Destroy:     true,
 				ExpectError: regexp.MustCompile("Unable to delete category"),
-				Config: providerConfig + `resource "readme_category" "test" {
+				Config: testProviderConfig + `resource "readme_category" "test" {
 					title = "` + mockCategoryCreate.Title + `"
 					type  = "` + mockCategoryCreate.Type + `"
 				}`,

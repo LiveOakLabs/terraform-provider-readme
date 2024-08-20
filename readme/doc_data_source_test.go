@@ -27,7 +27,7 @@ func TestDocDataSource(t *testing.T) {
 						Reply(200).
 						JSON(mockDoc)
 				},
-				Config: providerConfig + fmt.Sprintf(`
+				Config: testProviderConfig + fmt.Sprintf(`
 					data "readme_doc" "test" {
 						slug = "%s"
 					}`,

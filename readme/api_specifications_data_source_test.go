@@ -262,7 +262,7 @@ func TestAPISpecificationsDataSource(t *testing.T) {
 					ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 					Steps: []resource.TestStep{
 						{
-							Config:      providerConfig + tc.config,
+							Config:      testProviderConfig + tc.config,
 							ExpectError: regexp.MustCompile(tc.expectError),
 							PreConfig:   testdata.APISpecificationRespond(response, responseCode),
 						},
@@ -274,7 +274,7 @@ func TestAPISpecificationsDataSource(t *testing.T) {
 					ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 					Steps: []resource.TestStep{
 						{
-							Config: providerConfig + tc.config,
+							Config: testProviderConfig + tc.config,
 							Check: resource.ComposeAggregateTestCheckFunc(
 								apiSpecificationsChecks(t, response, tc.excluded)...,
 							),

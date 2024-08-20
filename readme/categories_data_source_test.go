@@ -32,7 +32,7 @@ func TestCategoriesDataSource(t *testing.T) {
 						AddHeader("x-total-count", "1").
 						JSON(mockCategoryList)
 				},
-				Config: providerConfig + `data "readme_categories" "test" {}`,
+				Config: testProviderConfig + `data "readme_categories" "test" {}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(
 						"data.readme_categories.test",
@@ -102,7 +102,7 @@ func TestCategoriesDataSource_GetError(t *testing.T) {
 						Reply(401).
 						JSON(mockAPIError)
 				},
-				Config:      providerConfig + `data "readme_categories" "test" {}`,
+				Config:      testProviderConfig + `data "readme_categories" "test" {}`,
 				ExpectError: expectError,
 			},
 		},

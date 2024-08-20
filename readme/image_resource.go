@@ -29,6 +29,7 @@ var (
 // imageResource is the resource implementation.
 type imageResource struct {
 	client *readme.Client
+	config providerConfig
 }
 
 // imageResourceModel is the data structure used to hold the resource state.
@@ -58,7 +59,9 @@ func (r *imageResource) Configure(_ context.Context, req resource.ConfigureReque
 		return
 	}
 
-	r.client = req.ProviderData.(*readme.Client)
+	cfg := req.ProviderData.(*providerData)
+	r.client = cfg.client
+	r.config = cfg.config
 }
 
 // openFile returns the contents of a file as bytes.

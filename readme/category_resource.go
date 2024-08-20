@@ -27,6 +27,7 @@ var (
 // categoryResource is the data source implementation.
 type categoryResource struct {
 	client *readme.Client
+	config providerConfig
 }
 
 // NewCategoryResource is a helper function to simplify the provider
@@ -54,7 +55,9 @@ func (r *categoryResource) Configure(
 		return
 	}
 
-	r.client = req.ProviderData.(*readme.Client)
+	cfg := req.ProviderData.(*providerData)
+	r.client = cfg.client
+	r.config = cfg.config
 }
 
 // ValidateConfig is used for validating attribute values.

@@ -1,6 +1,8 @@
-# Makefile for Terraform Provider
 # Run 'make help' for a list of targets.
 .DEFAULT_GOAL := help
+
+GO_MODULE := $(shell go list -m)
+PKG_PATH := readme
 
 .PHONY: help
 help: ## Shows this help
@@ -21,11 +23,11 @@ gofumpt: vet ## Check linting with 'gofumpt'
 
 .PHONY: lines
 lines: ## Check long lines.
-	@go run github.com/segmentio/golines -m 120 --dry-run readme/*.go
+	@go run github.com/segmentio/golines -m 120 --dry-run $(PKG_PATH)/
 
 .PHONY: lines-fix
 lines-fix: lines ## Fix long lines
-	@go run github.com/segmentio/golines -m 120 -w readme/*.go
+	@go run github.com/segmentio/golines -m 120 -w $(PKG_PATH)/
 
 .PHONY: golangci-lint
 golangci-lint: ## Lint using 'golangci-lint'
@@ -38,8 +40,8 @@ lint: modverify vet gofumpt lines golangci-lint ## Run all linters
 ## Testing ##
 .PHONY: test
 test: ## Run unit and race tests with 'go test'
-	go test -v -count=1 -parallel=4 -coverprofile=coverage.txt -covermode count ./readme/
-	go test -race -short ./readme/
+	go test -v -count=1 -parallel=4 -coverprofile=coverage.txt -covermode count ./$(PKG_PATH)/...
+	#go test -race -short ./$(PKG_PATH)/...
 
 ## Coverage ##
 .PHONY: coverage

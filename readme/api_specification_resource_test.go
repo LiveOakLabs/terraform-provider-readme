@@ -18,7 +18,7 @@ func TestAPISpecificationResource_Create(t *testing.T) {
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: providerConfig + fmt.Sprintf(`
+				Config: testProviderConfig + fmt.Sprintf(`
 					resource "readme_api_specification" "test" {
 						definition = "%s"
 					}`,
@@ -72,7 +72,7 @@ func TestAPISpecificationResource_CreateDeleteCategory(t *testing.T) {
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: providerConfig + fmt.Sprintf(`
+				Config: testProviderConfig + fmt.Sprintf(`
 					resource "readme_api_specification" "test" {
 						definition      = "%s"
 						delete_category = true

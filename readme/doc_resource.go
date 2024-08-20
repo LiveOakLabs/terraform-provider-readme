@@ -23,6 +23,61 @@ import (
 	"github.com/liveoaklabs/terraform-provider-readme/readme/frontmatter"
 )
 
+const docResourceDesc = `
+Manage docs on ReadMe.com
+
+See <https://docs.readme.com/main/reference/getdoc> for more information about this API endpoint.
+
+## Front Matter
+
+Docs on ReadMe support setting some attributes using front matter. 
+Resource attributes take precedence over front matter attributes in the provider.
+
+Refer to <https://docs.readme.com/main/docs/rdme> for more information about using front matter 
+in ReadMe docs and custom pages.
+
+## Doc Slugs
+
+Docs in ReadMe are uniquely identified by their slugs. The slug is a URL-friendly string that 
+is generated upon doc creation. By default, this is a normalized version of the doc title. 
+The slug cannot be altered using the API or the Terraform Provider, but can be edited in the 
+ReadMe web UI.
+
+This creates challenges when managing docs with Terraform. To address this, the provider supports 
+the **use_slug** attribute. When set, the provider will attempt to manage an existing 
+doc by its slug. This can also be set in front matter using the **slug** key.
+
+If this attribute is set and the doc does not exist, an error will be returned. This is intended 
+to be set when inheriting management of an existing doc or when customizing the slug *after* 
+the doc has been created.
+
+Note that doc slugs are shared between Guides and API Specification References.
+
+⚠️ **Experimental:** The 'use_slug' attribute is experimental and may result in unexpected behavior.
+
+## Destroying Docs with Children
+
+Docs in ReadMe can have child docs. 
+Terraform can infer a doc's relationship when they are all managed by the provider and delete them
+in the proper order as normal when referenced appropriately or when using **depends_on**.
+
+However, when managing docs with children, the provider may not be able to infer the relationship
+between parent and child docs, particularly in edge cases such as using the **use_slug** attribute
+to manage an API reference's parent doc.
+
+When destroying a doc, the provider will check for child docs and prevent deletion if they exist.
+This behavior can be controlled with the **config.destroy_child_docs** attribute. When set to true,
+the provider will destroy child docs prior to deleting the parent doc. Setting this as a provider
+configuration attribute allows for it to be toggled without requiring changes to the resource.
+
+When 'config.destroy_child_docs' is set to true, the provider will log a warning when child docs are
+deleted before the parent doc.
+
+For best results, manage docs with Terraform and set their relationship by referencing the resource
+address of the parent doc in the child doc's **parent_doc_slug** or **depends_on** attributes. This
+ensures they are deleted in the correct order.
+`
+
 // Ensure the implementation satisfies the expected interfaces.
 var (
 	_ resource.Resource                = &docResource{}
@@ -33,6 +88,7 @@ var (
 // docResource is the data source implementation.
 type docResource struct {
 	client *readme.Client
+	config providerConfig
 }
 
 // NewDocResource is a helper function to simplify the provider implementation.
@@ -59,7 +115,9 @@ func (r *docResource) Configure(
 		return
 	}
 
-	r.client = req.ProviderData.(*readme.Client)
+	cfg := req.ProviderData.(*providerData)
+	r.client = cfg.client
+	r.config = cfg.config
 }
 
 // ValidateConfig is used for validating attribute values.
@@ -392,7 +450,10 @@ func (r *docResource) Read(
 			state, apiResponse, err = getDoc(r.client, ctx, IDPrefix+stateID, state, requestOpts)
 			if err != nil {
 				if strings.Contains(err.Error(), "no doc found matching id") ||
-					strings.Contains(err.Error(), fmt.Sprintf("The doc with the slug '%s' couldn't be found.", IDPrefix+stateID)) {
+					strings.Contains(
+						err.Error(),
+						fmt.Sprintf("The doc with the slug '%s' couldn't be found.", IDPrefix+stateID),
+					) {
 					tflog.Info(
 						ctx,
 						fmt.Sprintf(
@@ -527,13 +588,181 @@ func (r *docResource) Delete(
 	}
 
 	requestOpts := apiRequestOptions(state.Version)
-	tflog.Info(ctx, fmt.Sprintf("deleting doc with request options=%+v", requestOpts))
 
-	// Delete the doc.
-	_, apiResponse, err := r.client.Doc.Delete(state.Slug.ValueString(), requestOpts)
+	// Check the category's docs to find the doc and its children.
+	docs, _, err := r.client.Category.GetDocs(state.CategorySlug.ValueString(), requestOpts)
 	if err != nil {
-		resp.Diagnostics.AddError("Unable to delete doc", clientError(err, apiResponse))
+		resp.Diagnostics.AddError("Unable to retrieve category docs.", clientError(err, nil))
+		return
 	}
+
+	// Gather the slugs of the docs to delete, including the parent and its children.
+	slugsToDelete, parentDoc := r.identifyDocsToDelete(ctx, state.Slug.ValueString(), docs, resp)
+	if parentDoc == nil {
+		return
+	}
+
+	// Ensure children are handled correctly.
+	// Delete them first if DestroyChildDocs is enabled. Otherwise, return.
+	if !r.handleChildDocs(ctx, resp, state.Slug.ValueString(), parentDoc) {
+		return
+	}
+
+	// Perform deletions
+	r.deleteDocs(ctx, resp, slugsToDelete, requestOpts)
+
+	// Warn if child docs were deleted
+	if len(slugsToDelete) > 1 && r.config.DestroyChildDocs.ValueBool() {
+		resp.Diagnostics.AddWarning(
+			fmt.Sprintf("Doc '%s' and its child docs were destroyed!", state.Slug.ValueString()),
+			fmt.Sprintf("The provider configuration 'config.destroy_child_docs' is set to true. "+
+				"Child docs were deleted before the parent doc '%s': %s", state.Slug.ValueString(),
+				strings.Join(slugsToDelete[1:], ", ")),
+		)
+	}
+}
+
+// identifyDocsToDelete finds the doc and its children to delete.
+func (r *docResource) identifyDocsToDelete(
+	ctx context.Context,
+	slug string,
+	docs []readme.CategoryDocs,
+	resp *resource.DeleteResponse,
+) ([]string, *readme.CategoryDocs) {
+	var slugsToDelete []string
+	var parentDoc *readme.CategoryDocs
+
+	for _, doc := range docs {
+		if parentDoc, slugsToDelete = r.matchDocAndChildren(doc, slug); parentDoc != nil {
+			break
+		}
+	}
+
+	if parentDoc == nil {
+		resp.Diagnostics.AddError(
+			"Doc not found",
+			fmt.Sprintf("The doc with slug '%s' was not found in the retrieved category docs.", slug),
+		)
+	}
+
+	return slugsToDelete, parentDoc
+}
+
+// matchDocAndChildren finds the doc and its children in the category docs.
+func (r *docResource) matchDocAndChildren(doc readme.CategoryDocs, slug string) (*readme.CategoryDocs, []string) {
+	if doc.Slug == slug {
+		return &doc, r.collectDocSlugs(doc)
+	}
+	for _, child := range doc.Children {
+		if child.Slug == slug {
+			return &child, r.collectDocSlugs(child)
+		}
+		for _, grandchild := range child.Children {
+			if grandchild.Slug == slug {
+				return &grandchild, r.collectDocSlugs(grandchild)
+			}
+		}
+	}
+	return nil, nil
+}
+
+// collectDocSlugs collects the slugs of the doc and its children.
+func (r *docResource) collectDocSlugs(doc readme.CategoryDocs) []string {
+	var slugs []string
+	slugs = append(slugs, doc.Slug)
+	for _, child := range doc.Children {
+		slugs = append(slugs, r.collectDocSlugs(child)...)
+	}
+	return slugs
+}
+
+// handleChildDocs ensures that child docs are handled correctly before
+// deleting the parent doc. If the provider configuration
+// 'config.destroy_child_docs' is set to true, child docs will be deleted
+// first. If child docs exist and 'config.destroy_child_docs' is false, an
+// error will be returned.
+func (r *docResource) handleChildDocs(
+	ctx context.Context,
+	resp *resource.DeleteResponse,
+	slug string,
+	parentDoc *readme.CategoryDocs,
+) bool {
+	if len(parentDoc.Children) > 0 && !r.config.DestroyChildDocs.ValueBool() {
+		childSlugs := make([]string, 0, len(parentDoc.Children))
+		for _, child := range parentDoc.Children {
+			childSlugs = append(childSlugs, child.Slug)
+		}
+		resp.Diagnostics.AddError(
+			fmt.Sprintf("Unable to delete doc '%s' because it has child docs.", slug),
+			"Child docs must be deleted first. Set the provider 'config.destroy_child_docs' "+
+				"option to true or delete child docs first.\n"+
+				fmt.Sprintf("Docs that were found: %s", strings.Join(childSlugs, ", ")),
+		)
+		return false
+	}
+	return true
+}
+
+// deleteDocs deletes the docs in the slugsToDelete slice.
+func (r *docResource) deleteDocs(
+	ctx context.Context,
+	resp *resource.DeleteResponse,
+	slugsToDelete []string,
+	requestOpts readme.RequestOptions,
+) {
+	for i := len(slugsToDelete) - 1; i >= 0; i-- {
+		slug := slugsToDelete[i]
+		if !r.deleteDoc(ctx, resp, slug, requestOpts) {
+			return
+		}
+	}
+}
+
+// deleteDoc deletes the doc with the specified slug.
+func (r *docResource) deleteDoc(
+	ctx context.Context,
+	resp *resource.DeleteResponse,
+	slug string,
+	requestOpts readme.RequestOptions,
+) bool {
+	_, apiResponse, err := r.client.Doc.Get(slug, requestOpts)
+	if err != nil {
+		if apiResponse != nil && apiResponse.HTTPResponse.StatusCode == 404 {
+			tflog.Info(ctx, fmt.Sprintf("doc %s not found when deleting, removing from state", slug))
+			resp.State.RemoveResource(ctx)
+			resp.Diagnostics.AddWarning(
+				fmt.Sprintf("Doc '%s' not found when deleting.", slug),
+				"The doc was not found and has been removed from state.",
+			)
+			return false
+		}
+		resp.Diagnostics.AddError(
+			"Unable to delete doc.",
+			fmt.Sprintf("Error checking if doc '%s' exists: %s", slug, err.Error()),
+		)
+		return false
+	}
+
+	tflog.Info(ctx, fmt.Sprintf("deleting doc with slug %s and request options=%+v", slug, requestOpts))
+	_, apiResponse, err = r.client.Doc.Delete(slug, requestOpts)
+	if err != nil {
+		if apiResponse != nil && apiResponse.HTTPResponse.StatusCode == 404 {
+			tflog.Info(ctx, fmt.Sprintf("doc %s not found when deleting, removing from state", slug))
+			resp.State.RemoveResource(ctx)
+			resp.Diagnostics.AddWarning(
+				fmt.Sprintf("Doc '%s' not found when deleting.", slug),
+				"The doc was not found and has been removed from state.",
+			)
+			return false
+		}
+		resp.Diagnostics.AddError(
+			fmt.Sprintf("Unable to delete doc with slug '%s'", slug),
+			clientError(err, apiResponse),
+		)
+		return false
+	}
+
+	return true
 }
 
 // ImportState imports a doc by its slug.
@@ -588,36 +817,8 @@ func (r *docResource) Schema(
 	resp *resource.SchemaResponse,
 ) {
 	resp.Schema = schema.Schema{
-		Description: strings.Join([]string{
-			"Manage docs on ReadMe.com",
-			"Docs on ReadMe support setting some attributes using front matter. ",
-			"Resource attributes take precedence over front matter attributes in ",
-			"the provider.",
-			"\n\n",
-			"Refer to <https://docs.readme.com/main/docs/rdme> for more information",
-			"about using front matter in ReadMe docs and custom pages.",
-			"\n\n",
-			"See <https://docs.readme.com/main/reference/getdoc> for more information about this API endpoint.",
-			"\n\n",
-			"## Doc Slugs",
-			"\n\n",
-			"Docs in ReadMe are uniquely identified by their slugs. The slug is a URL-friendly string that",
-			"is generated upon doc creation. By default, this is a normalized version of the doc title.",
-			"The slug cannot be altered using the API or the Terraform Provider, but can be edited in the",
-			"ReadMe web UI.",
-			"\n\n",
-			"This creates challenges when managing docs with Terraform. To address this, the provider",
-			"supports the `use_slug` attribute. When set, the provider will attempt to manage an existing",
-			"doc by its slug. This can also be set in front matter using the `slug` key.",
-			"\n\n",
-			"If this attribute is set and the doc does not exist, an error will be returned. This is intended",
-			"to be set when inheriting management of an existing doc or when customizing the slug *after*",
-			"the doc has been created.",
-			"\n\n",
-			"Note that doc slugs are shared between Guides and API Specification References.",
-			"\n\n",
-			"**The `use_slug` attribute is expierimental and may result in unexpected behavior.**",
-		}, " "),
+		Description:         docResourceDesc,
+		MarkdownDescription: docResourceDesc,
 		Attributes: map[string]schema.Attribute{
 			"algolia": schema.SingleNestedAttribute{
 				Description: "Metadata about the Algolia search integration. " +

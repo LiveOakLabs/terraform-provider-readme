@@ -28,7 +28,7 @@ func TestImageResource(t *testing.T) {
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: providerConfig + `resource "readme_image" "test" {
+				Config: testProviderConfig + `resource "readme_image" "test" {
 					source = "../examples/resources/readme_image/example.png"
 				}`,
 				PreConfig: func() {
@@ -82,7 +82,7 @@ func TestImageResource_Errors(t *testing.T) {
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: providerConfig + `resource "readme_image" "test" {
+				Config: testProviderConfig + `resource "readme_image" "test" {
 					source = "invalid/path/to/image.png"
 				}`,
 				ExpectError: regexp.MustCompile("Unable to get checksum for image file"),

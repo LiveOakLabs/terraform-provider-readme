@@ -20,9 +20,9 @@ func TestDocResource(t *testing.T) {
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
-			// Test successful creation.
+			// 1. Test successful creation.
 			{
-				Config: providerConfig + fmt.Sprintf(`
+				Config: testProviderConfig + fmt.Sprintf(`
 					resource "readme_doc" "test" {
 						title    = "%s"
 						body     = "%s"
@@ -41,9 +41,9 @@ func TestDocResource(t *testing.T) {
 				Check: docResourceCommonChecks(mockDoc, ""),
 			},
 
-			// Test that a new doc gets created if it's deleted outside of Terraform.
+			// 2. Test that a new doc gets created if it's deleted outside of Terraform.
 			{
-				Config: providerConfig + fmt.Sprintf(`
+				Config: testProviderConfig + fmt.Sprintf(`
 					resource "readme_doc" "test" {
 						title    = "%s"
 						body     = "%s"
@@ -81,7 +81,11 @@ func TestDocResource(t *testing.T) {
 						JSON(mockCategory)
 					// Lookup version.
 					gock.New(testURL).Get("/version").Times(1).Reply(200).JSON(mockVersionList)
-					gock.New(testURL).Get("/version/" + mockVersionList[0].VersionClean).Times(1).Reply(200).JSON(mockVersion)
+					gock.New(testURL).
+						Get("/version/" + mockVersionList[0].VersionClean).
+						Times(1).
+						Reply(200).
+						JSON(mockVersion)
 					// List of docs to match parent doc.
 					gock.New(testURL).
 						Post("/docs").
@@ -105,9 +109,9 @@ func TestDocResource(t *testing.T) {
 				Check: docResourceCommonChecks(mockDoc, ""),
 			},
 
-			// Test update results in error when the pre-update read fails.
+			// 3. Test update results in error when the pre-update read fails.
 			{
-				Config: providerConfig + fmt.Sprintf(`
+				Config: testProviderConfig + fmt.Sprintf(`
 					resource "readme_doc" "test" {
 						title    = "Update"
 						body     = "%s"
@@ -123,9 +127,9 @@ func TestDocResource(t *testing.T) {
 				ExpectError: regexp.MustCompile("DOC_NOTFOUND"),
 			},
 
-			// Test update results in error when the update action fails.
+			// 4. Test update results in error when the update action fails.
 			{
-				Config: providerConfig + fmt.Sprintf(`
+				Config: testProviderConfig + fmt.Sprintf(`
 					resource "readme_doc" "test" {
 						title    = "Update 2"
 						body     = "%s"
@@ -152,9 +156,9 @@ func TestDocResource(t *testing.T) {
 				ExpectError: regexp.MustCompile("Unable to update doc"),
 			},
 
-			// Test update results in error when post-update read fails.
+			// 5. Test update results in error when post-update read fails.
 			{
-				Config: providerConfig + fmt.Sprintf(`
+				Config: testProviderConfig + fmt.Sprintf(`
 					resource "readme_doc" "test" {
 						title    = "Update"
 						body     = "%s"
@@ -179,10 +183,10 @@ func TestDocResource(t *testing.T) {
 				ExpectError: regexp.MustCompile("Unable to update doc"),
 			},
 
-			// Test delete error when API responds with 400.
+			// 6. Test delete error when API responds with 400.
 			{
 				Destroy: true,
-				Config: providerConfig + fmt.Sprintf(`
+				Config: testProviderConfig + fmt.Sprintf(`
 					resource "readme_doc" "test" {
 						title    = "%s"
 						body     = "%s"
@@ -193,6 +197,9 @@ func TestDocResource(t *testing.T) {
 				),
 				PreConfig: func() {
 					gock.OffAll()
+					gock.New(testURL).
+						Get("/categories/" + mockCategory.Slug + "/docs").
+						Times(1).Reply(200).JSON(mockCategoryDocs)
 					docCommonGocks()
 					gock.New(testURL).Get("/docs/" + mockDoc.Slug).Times(2).Reply(200).JSON(mockDoc)
 					gock.New(testURL).Delete("/docs/" + mockDoc.Slug).Times(1).Reply(400)
@@ -200,9 +207,9 @@ func TestDocResource(t *testing.T) {
 				ExpectError: regexp.MustCompile("Unable to delete doc"),
 			},
 
-			// Test successful update when title changes.
+			// 7. Test successful update when title changes.
 			{
-				Config: providerConfig + fmt.Sprintf(`
+				Config: testProviderConfig + fmt.Sprintf(`
 					resource "readme_doc" "test" {
 						title    = "Update"
 						body     = "%s"
@@ -232,7 +239,7 @@ func TestDocResource(t *testing.T) {
 				),
 			},
 
-			// Test import.
+			// 8. Test import.
 			{
 				ResourceName:  "readme_doc.test",
 				ImportState:   true,
@@ -240,6 +247,9 @@ func TestDocResource(t *testing.T) {
 				PreConfig: func() {
 					// Ensure any existing mocks are removed.
 					gock.OffAll()
+					gock.New(testURL).
+						Get("/categories/" + mockCategory.Slug + "/docs").
+						Times(1).Reply(200).JSON(mockCategoryDocs)
 					docCommonGocks()
 					gock.New(testURL).Get("/docs/" + mockDoc.Slug).Times(2).Reply(200).JSON(mockDoc)
 					gock.New(testURL).Delete("/docs/" + mockDoc.Slug).Times(1).Reply(204)
@@ -283,7 +293,7 @@ func TestDocResource_Create_Errors(t *testing.T) {
 				ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 				Steps: []resource.TestStep{
 					{
-						Config: providerConfig + fmt.Sprintf(`
+						Config: testProviderConfig + fmt.Sprintf(`
 							resource "readme_doc" "test" {
 								title    = "Update"
 								category = "%s"
@@ -313,6 +323,9 @@ func TestDocResource_Create_Errors(t *testing.T) {
 									Times(1).
 									Reply(204)
 							}
+							gock.New(testURL).
+								Get("/categories/" + mockCategory.Slug + "/docs").
+								Times(1).Reply(200).JSON(mockCategoryDocs)
 						},
 						ExpectError: regexp.MustCompile(`Unable to create doc`),
 					},
@@ -617,7 +630,7 @@ func TestDocResource_FrontMatter(t *testing.T) {
 				ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 				Steps: []resource.TestStep{
 					{
-						Config: providerConfig + fmt.Sprintf(
+						Config: testProviderConfig + fmt.Sprintf(
 							`
 								resource "readme_doc" "test" {
 									body = chomp("%s")
@@ -629,6 +642,9 @@ func TestDocResource_FrontMatter(t *testing.T) {
 						),
 						PreConfig: func() {
 							gock.OffAll()
+							gock.New(testURL).
+								Get("/categories/" + mockCategory.Slug + "/docs").
+								Times(1).Reply(200).JSON(mockCategoryDocs)
 							docCommonGocks()
 							// Mock the request to create the resource.
 							gock.New(testURL).Post("/docs").Times(3).Reply(201).JSON(expect)
@@ -701,7 +717,7 @@ func TestDocResource_User_Attribute_Changes(t *testing.T) {
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: providerConfig + fmt.Sprintf(`
+				Config: testProviderConfig + fmt.Sprintf(`
 					resource "readme_doc" "test" {
 						title    = "%s"
 						body     = "%s"
@@ -711,9 +727,12 @@ func TestDocResource_User_Attribute_Changes(t *testing.T) {
 					expectedDoc.Title, expectedDoc.Body, expectedDoc.Category, expectedDoc.Type,
 				),
 				PreConfig: func() {
+					gock.New(testURL).
+						Get("/categories/" + mockCategory.Slug + "/docs").
+						Times(1).Reply(200).JSON(mockCategoryDocs)
 					docCommonGocks()
 					gock.New(testURL).Post("/docs").Times(1).Reply(201).JSON(expectedDoc)
-					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(3).Reply(200).JSON(expectedDoc)
+					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(4).Reply(200).JSON(expectedDoc)
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(
@@ -724,7 +743,7 @@ func TestDocResource_User_Attribute_Changes(t *testing.T) {
 				),
 			},
 			{
-				Config: providerConfig + fmt.Sprintf(`
+				Config: testProviderConfig + fmt.Sprintf(`
 					resource "readme_doc" "test" {
 						title    = "%s"
 						body     = "updated body"
@@ -735,6 +754,9 @@ func TestDocResource_User_Attribute_Changes(t *testing.T) {
 				),
 				PreConfig: func() {
 					updatedDoc.Body = "updated body"
+					gock.New(testURL).
+						Get("/categories/" + mockCategory.Slug + "/docs").
+						Times(1).Reply(200).JSON(mockCategoryDocs)
 					docCommonGocks()
 					// First request responds with the original user.
 					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(1).Reply(200).JSON(expectedDoc)
@@ -768,7 +790,7 @@ func TestDocResource_Hidden_Attribute_Changes(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create doc with hidden initially unset.
 			{
-				Config: providerConfig + fmt.Sprintf(`
+				Config: testProviderConfig + fmt.Sprintf(`
 					resource "readme_doc" "test" {
 						title    = "%s"
 						body     = "body"
@@ -781,6 +803,9 @@ func TestDocResource_Hidden_Attribute_Changes(t *testing.T) {
 					expectedDoc.Body = "body"
 					expectedDoc.Hidden = false // ReadMe API default.
 
+					gock.New(testURL).
+						Get("/categories/" + mockCategory.Slug + "/docs").
+						Times(1).Reply(200).JSON(mockCategoryDocs)
 					docCommonGocks()
 					gock.New(testURL).Post("/docs").Times(1).Reply(201).JSON(expectedDoc)
 					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(3).Reply(200).JSON(expectedDoc)
@@ -795,7 +820,7 @@ func TestDocResource_Hidden_Attribute_Changes(t *testing.T) {
 			},
 			// Change the 'hidden' attribute to true.
 			{
-				Config: providerConfig + fmt.Sprintf(`
+				Config: testProviderConfig + fmt.Sprintf(`
 					resource "readme_doc" "test" {
 						title    = "%s"
 						body     = "body"
@@ -823,7 +848,7 @@ func TestDocResource_Hidden_Attribute_Changes(t *testing.T) {
 			},
 			// Change to setting the 'hidden' attribute in front matter.
 			{
-				Config: providerConfig + fmt.Sprintf(`
+				Config: testProviderConfig + fmt.Sprintf(`
 					resource "readme_doc" "test" {
 						title    = "%s"
 					    body     = "---\nhidden: false\n---\nbody"
@@ -850,7 +875,7 @@ func TestDocResource_Hidden_Attribute_Changes(t *testing.T) {
 			},
 			// Change back to setting 'hidden' on the resource.
 			{
-				Config: providerConfig + fmt.Sprintf(`
+				Config: testProviderConfig + fmt.Sprintf(`
 					resource "readme_doc" "test" {
 						title    = "%s"
 						body     = "body"
@@ -878,7 +903,7 @@ func TestDocResource_Hidden_Attribute_Changes(t *testing.T) {
 			},
 			// Change 'hidden' to false.
 			{
-				Config: providerConfig + fmt.Sprintf(`
+				Config: testProviderConfig + fmt.Sprintf(`
 					resource "readme_doc" "test" {
 						title    = "%s"
 						body     = "body"
@@ -906,7 +931,7 @@ func TestDocResource_Hidden_Attribute_Changes(t *testing.T) {
 			},
 			// Remove the 'hidden' attribute. It remains unchanged.
 			{
-				Config: providerConfig + fmt.Sprintf(`
+				Config: testProviderConfig + fmt.Sprintf(`
 					resource "readme_doc" "test" {
 						title    = "%s"
 						body     = "body"
@@ -919,6 +944,9 @@ func TestDocResource_Hidden_Attribute_Changes(t *testing.T) {
 					expectedDoc.Body = "body"
 					expectedDoc.Hidden = false
 
+					gock.New(testURL).
+						Get("/categories/" + mockCategory.Slug + "/docs").
+						Times(1).Reply(200).JSON(mockCategoryDocs)
 					docCommonGocks()
 					gock.New(testURL).Put("/docs/" + expectedDoc.Slug).Times(1).Reply(200).JSON(expectedDoc)
 					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(3).Reply(200).JSON(expectedDoc)
@@ -951,7 +979,7 @@ func TestDocResource_Order_Attribute_Changes(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create doc with order set.
 			{
-				Config: providerConfig + fmt.Sprintf(`
+				Config: testProviderConfig + fmt.Sprintf(`
 					resource "readme_doc" "test" {
 						title    = "%s"
 						body     = "%s"
@@ -979,7 +1007,7 @@ func TestDocResource_Order_Attribute_Changes(t *testing.T) {
 			},
 			// Change the order attribute.
 			{
-				Config: providerConfig + fmt.Sprintf(`
+				Config: testProviderConfig + fmt.Sprintf(`
 					resource "readme_doc" "test" {
 						title    = "%s"
 						body     = "%s"
@@ -1006,7 +1034,7 @@ func TestDocResource_Order_Attribute_Changes(t *testing.T) {
 			},
 			// Change to setting order in front matter.
 			{
-				Config: providerConfig + fmt.Sprintf(`
+				Config: testProviderConfig + fmt.Sprintf(`
 					resource "readme_doc" "test" {
 						title    = "%s"
 						body     = "---\norder: 3\n---\nbody"
@@ -1020,6 +1048,9 @@ func TestDocResource_Order_Attribute_Changes(t *testing.T) {
 					expectedDoc.Body = "---\norder: 3\n---\nbody"
 					expectedDoc.Order = 3
 
+					gock.New(testURL).
+						Get("/categories/" + mockCategory.Slug + "/docs").
+						Times(1).Reply(200).JSON(mockCategoryDocs)
 					docCommonGocks()
 					gock.New(testURL).Put("/docs/" + expectedDoc.Slug).Times(1).Reply(200).JSON(expectedDoc)
 					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(4).Reply(200).JSON(expectedDoc)
@@ -1034,7 +1065,7 @@ func TestDocResource_Order_Attribute_Changes(t *testing.T) {
 			},
 			// Change back to setting order in the resource.
 			{
-				Config: providerConfig + fmt.Sprintf(`
+				Config: testProviderConfig + fmt.Sprintf(`
 					resource "readme_doc" "test" {
 						title    = "%s"
 					    body     = "%s"
@@ -1062,7 +1093,7 @@ func TestDocResource_Order_Attribute_Changes(t *testing.T) {
 			},
 			// Remove the order attribute. It is left unchanged.
 			{
-				Config: providerConfig + fmt.Sprintf(`
+				Config: testProviderConfig + fmt.Sprintf(`
 					resource "readme_doc" "test" {
 						title    = "%s"
 						body     = "%s"
@@ -1074,6 +1105,9 @@ func TestDocResource_Order_Attribute_Changes(t *testing.T) {
 				PreConfig: func() {
 					expectedDoc.Order = 4
 
+					gock.New(testURL).
+						Get("/categories/" + mockCategory.Slug + "/docs").
+						Times(1).Reply(200).JSON(mockCategoryDocs)
 					docCommonGocks()
 					gock.New(testURL).Put("/docs/" + expectedDoc.Slug).Times(1).Reply(200).JSON(expectedDoc)
 					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(3).Reply(200).JSON(expectedDoc)
@@ -1108,7 +1142,7 @@ func TestDocResource_Order_FrontMatter_Changes(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create doc with order set in front matter.
 			{
-				Config: providerConfig + fmt.Sprintf(`
+				Config: testProviderConfig + fmt.Sprintf(`
 					resource "readme_doc" "test" {
 						title    = "%s"
 						body     = "---\norder: 1\n---\nbody"
@@ -1133,7 +1167,7 @@ func TestDocResource_Order_FrontMatter_Changes(t *testing.T) {
 			},
 			// Change the order attribute in front matter.
 			{
-				Config: providerConfig + fmt.Sprintf(`
+				Config: testProviderConfig + fmt.Sprintf(`
 					resource "readme_doc" "test" {
 						title    = "%s"
 						body     = "---\norder: 2\n---\nbody"
@@ -1161,7 +1195,7 @@ func TestDocResource_Order_FrontMatter_Changes(t *testing.T) {
 			},
 			// Remove the order attribute.
 			{
-				Config: providerConfig + fmt.Sprintf(`
+				Config: testProviderConfig + fmt.Sprintf(`
 					resource "readme_doc" "test" {
 						title    = "%s"
 						body     = "body"
@@ -1175,9 +1209,12 @@ func TestDocResource_Order_FrontMatter_Changes(t *testing.T) {
 					expectedDoc.Body = `body`
 					expectedDoc.Order = 999
 
+					gock.New(testURL).
+						Get("/categories/" + mockCategory.Slug + "/docs").
+						Times(1).Reply(200).JSON(mockCategoryDocs)
 					docCommonGocks()
 					gock.New(testURL).Put("/docs/" + expectedDoc.Slug).Times(1).Reply(200).JSON(expectedDoc)
-					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(4).Reply(200).JSON(expectedDoc)
+					gock.New(testURL).Get("/docs/" + expectedDoc.Slug).Times(5).Reply(200).JSON(expectedDoc)
 
 					// Post-test deletion
 					gock.New(testURL).Delete("/docs/" + expectedDoc.Slug).Times(1).Reply(204)
@@ -1212,7 +1249,7 @@ func TestDocRenamedSlugResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Test successful creation.
 			{
-				Config: providerConfig + fmt.Sprintf(`
+				Config: testProviderConfig + fmt.Sprintf(`
 					resource "readme_doc" "test" {
 						title    = "%s"
 						body     = "%s"
@@ -1234,7 +1271,7 @@ func TestDocRenamedSlugResource(t *testing.T) {
 			// Test that the doc can be renamed outside of Terraform and
 			// continue to be managed by Terraform.
 			{
-				Config: providerConfig + fmt.Sprintf(`
+				Config: testProviderConfig + fmt.Sprintf(`
 					resource "readme_doc" "test" {
 						title    = "%s"
 						body     = "%s"
@@ -1245,6 +1282,13 @@ func TestDocRenamedSlugResource(t *testing.T) {
 				),
 				PreConfig: func() {
 					gock.OffAll()
+
+					categoryDocs := mockCategoryDocs
+					categoryDocs[0].Slug = renamed.Slug
+					gock.New(testURL).
+						Get("/categories/" + mockCategory.Slug + "/docs").
+						Times(1).Reply(200).JSON(categoryDocs)
+
 					docCommonGocks()
 
 					// Original slug is not found.
@@ -1261,9 +1305,9 @@ func TestDocRenamedSlugResource(t *testing.T) {
 						Reply(200).
 						JSON(mockDocSearchResponse)
 
-					// The matched doc is requested from the search results.
-					// It's also requested again after the rename.
-					gock.New(testURL).Get("/docs/" + "new-slug").Times(4).Reply(200).JSON(renamed)
+					// The matched doc is requested from the search results, after the
+					// rename, and when deleting the resource.
+					gock.New(testURL).Get("/docs/" + "new-slug").Times(5).Reply(200).JSON(renamed)
 
 					// An update is triggered to match state with the new slug.
 					gock.New(testURL).Put("/docs/" + "new-slug").Times(1).Reply(200).JSON(renamed)

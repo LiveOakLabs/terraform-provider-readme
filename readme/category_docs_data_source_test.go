@@ -18,7 +18,7 @@ func TestCategoryDocsDataSource(t *testing.T) {
 			Slug:   "getting-started",
 			Order:  999,
 			Hidden: false,
-			Children: []readme.CategoryDocsChildren{
+			Children: []readme.CategoryDocs{
 				{
 					ID:     "63bdfb0079110f0094641789",
 					Title:  "Test Child Doc",
@@ -44,7 +44,7 @@ func TestCategoryDocsDataSource(t *testing.T) {
 						Reply(200).
 						JSON(expectResponse)
 				},
-				Config: providerConfig + `data "readme_category_docs" "test" { slug = "testing" }`,
+				Config: testProviderConfig + `data "readme_category_docs" "test" { slug = "testing" }`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(
 						"data.readme_category_docs.test",
@@ -123,7 +123,7 @@ func TestCategoryDocsDataSource_GetError(t *testing.T) {
 						Reply(404).
 						JSON(expectResponse)
 				},
-				Config:      providerConfig + `data "readme_category_docs" "test" { slug = "testing" }`,
+				Config:      testProviderConfig + `data "readme_category_docs" "test" { slug = "testing" }`,
 				ExpectError: expectError,
 			},
 		},

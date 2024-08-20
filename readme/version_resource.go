@@ -28,6 +28,7 @@ var (
 // versionResource is the data source implementation.
 type versionResource struct {
 	client *readme.Client
+	config providerConfig
 }
 
 // versionResourceModel maps the struct from the ReadMe client library to Terraform resource attributes.
@@ -72,7 +73,9 @@ func (r *versionResource) Configure(
 		return
 	}
 
-	r.client = req.ProviderData.(*readme.Client)
+	cfg := req.ProviderData.(*providerData)
+	r.client = cfg.client
+	r.config = cfg.config
 }
 
 // ValidateConfig is used for validating attribute values.

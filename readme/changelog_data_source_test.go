@@ -26,7 +26,7 @@ func TestChangelogDataSource(t *testing.T) {
 						Reply(200).
 						JSON(mockChangelogs[0])
 				},
-				Config: providerConfig + `
+				Config: testProviderConfig + `
 					data "readme_changelog" "test" {
 						slug = "` + mockChangelogs[0].Slug + `"
 					}`,
