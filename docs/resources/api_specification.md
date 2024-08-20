@@ -3,36 +3,42 @@
 page_title: "readme_api_specification Resource - readme"
 subcategory: ""
 description: |-
-  Manages an API specification on ReadMe.com
-  The provider creates and updates API specifications by first uploading the definition to the API registry and then creating or updating the API specification using the UUID returned from the API registry. This is necessary for associating an API specification with its definition. Ensuring the definition is created in the API registry is necessary for retrieving the remote definition. This behavior is undocumented in the ReadMe API documentation but works the same way the official ReadMe rdme CLI tool works.
+  Manages API specifications on ReadMe.com by uploading the definition to the API registry and associating it with the
+  specification using the returned UUID. This association is necessary for managing the API specification and its
+  definition. The behavior is similar to the official rdme CLI but is undocumented in the ReadMe API.
   External Changes
-  External changes made to an API specification managed by Terraform will not be detected due to the way the API registry works. When a specification definition is updated, the registry UUID changes and is only available from the response when the definition is published to the registry. When Terraform runs after an external update, there's no way of programatically retrieving the current state without the current UUID. Forcing a Terraform update (e.g. tainting or a manual change) will get things synchronized again.
+  External changes to API specifications managed by Terraform are not automatically detected. The UUID changes when a
+  definition is updated, and the new UUID is only available when published to the registry. To synchronize, force an
+  update via Terraform (e.g., taint or manual change).
   Importing Existing Specifications
-  Importing API specifications is limited due to the behavior of the API registry and associating a specification with its definition. When importing, Terraform will replace the remote definition on its next run, regardless if it differs from the local definition. This will associate a registry UUID with the specification.
-  Managing API Specification Docs
-  API Specifications created in ReadMe can have a documentation page associated with them. This is automatically created by ReadMe when a specification is created. The documentation page is not implicitly managed by Terraform. To manage the documentation page, use the readme_doc resource with the use_slug attribute set to the API specification tag slug.
-  See https://docs.readme.com/main/reference/uploadapispecification for more information about this API endpoint.
+  Importing is limited due to how the API registry associates specifications with definitions. Terraform will overwrite
+  the remote definition on the next run, replacing the UUID.
+  Managing Documentation
+  API specifications on ReadMe automatically create a documentation page, but it isn't managed by Terraform. Use the
+  readme_doc resource with use_slug to manage the documentation page.
+  See the ReadMe API documentation at https://docs.readme.com/main/reference/uploadapispecification for more information.
 ---
 
 # readme_api_specification (Resource)
 
-Manages an API specification on ReadMe.com
-
-The provider creates and updates API specifications by first uploading the definition to the API registry and then creating or updating the API specification using the UUID returned from the API registry. This is necessary for associating an API specification with its definition. Ensuring the definition is created in the API registry is necessary for retrieving the remote definition. This behavior is undocumented in the ReadMe API documentation but works the same way the official ReadMe `rdme` CLI tool works.
+Manages API specifications on ReadMe.com by uploading the definition to the API registry and associating it with the 
+specification using the returned UUID. This association is necessary for managing the API specification and its 
+definition. The behavior is similar to the official rdme CLI but is undocumented in the ReadMe API.
 
 ## External Changes
-
-External changes made to an API specification managed by Terraform will not be detected due to the way the API registry works. When a specification definition is updated, the registry UUID changes and is only available from the response when the definition is published to the registry. When Terraform runs after an external update, there's no way of programatically retrieving the current state without the current UUID. Forcing a Terraform update (e.g. tainting or a manual change) will get things synchronized again.
+External changes to API specifications managed by Terraform are not automatically detected. The UUID changes when a 
+definition is updated, and the new UUID is only available when published to the registry. To synchronize, force an 
+update via Terraform (e.g., taint or manual change).
 
 ## Importing Existing Specifications
+Importing is limited due to how the API registry associates specifications with definitions. Terraform will overwrite 
+the remote definition on the next run, replacing the UUID.
 
-Importing API specifications is limited due to the behavior of the API registry and associating a specification with its definition. When importing, Terraform will replace the remote definition on its next run, regardless if it differs from the local definition. This will associate a registry UUID with the specification.
+## Managing Documentation
+API specifications on ReadMe automatically create a documentation page, but it isn't managed by Terraform. Use the 
+readme_doc resource with use_slug to manage the documentation page.
 
-## Managing API Specification Docs
-
-API Specifications created in ReadMe can have a documentation page associated with them. This is automatically created by ReadMe when a specification is created. The documentation page is not implicitly managed by Terraform. To manage the documentation page, use the `readme_doc` resource with the `use_slug` attribute set to the API specification tag slug.
-
-See <https://docs.readme.com/main/reference/uploadapispecification> for more information about this API endpoint.
+See the ReadMe API documentation at https://docs.readme.com/main/reference/uploadapispecification for more information.
 
 ## Example Usage
 
@@ -83,25 +89,23 @@ resource "readme_doc" "example" {
 
 ### Required
 
-- `definition` (String) The raw API specification definition JSON.
+- `definition` (String) Raw API specification definition in JSON format.
 
 ### Optional
 
-- `delete_category` (Boolean) Delete the category associated with the API specification when the resource is deleted.
-- `semver` (String) The semver(-ish) of the API specification. This value may also be set in the definition JSON `info:version` key, but will be ignored if this attribute is set. Changing the version of a created resource will replace the API specification. Use unique resources to use the same specification across multiple versions.
-
-Learn more about document versioning at <https://docs.readme.com/main/docs/versions>.
+- `delete_category` (Boolean) Delete the associated category when the resource is deleted.
+- `semver` (String) Semver (or similar) for the API specification. This value can be set in the `info:version` key of the definition JSON, but this parameter takes precedence. Changing the version will replace the API specification. Use unique resources for multiple versions. Learn more about document versioning [here](https://docs.readme.com/main/docs/versions).
 
 ### Read-Only
 
 - `category` (Object) Category metadata for the API specification. (see [below for nested schema](#nestedatt--category))
-- `id` (String) The unique identifier of the API specification.
-- `last_synced` (String) Timestamp of last synchronization.
-- `source` (String) The creation source of the API specification.
-- `title` (String) The title of the API specification derived from the specification JSON.
-- `type` (String) The type of the API specification.
-- `uuid` (String) The API registry UUID associated with the specification.
-- `version` (String) The version ID the API specification is associated with.
+- `id` (String) Unique identifier of the API specification.
+- `last_synced` (String) Timestamp of the last synchronization.
+- `source` (String) Creation source of the API specification.
+- `title` (String) Title derived from the specification JSON.
+- `type` (String) Type of the API specification.
+- `uuid` (String) UUID of the API registry associated with this specification.
+- `version` (String) Version ID associated with the API specification.
 
 <a id="nestedatt--category"></a>
 ### Nested Schema for `category`
