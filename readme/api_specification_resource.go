@@ -3,7 +3,6 @@ package readme
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -20,20 +19,41 @@ import (
 	"github.com/liveoaklabs/readme-api-go-client/readme"
 )
 
+const apiSpecResourceDesc = `
+Manages API specifications on ReadMe.com by uploading the definition to the API registry and associating it with the 
+specification using the returned UUID. This association is necessary for managing the API specification and its 
+definition. The behavior is similar to the official rdme CLI but is undocumented in the ReadMe API.
+
+## External Changes
+External changes to API specifications managed by Terraform are not automatically detected. The UUID changes when a 
+definition is updated, and the new UUID is only available when published to the registry. To synchronize, force an 
+update via Terraform (e.g., taint or manual change).
+
+## Importing Existing Specifications
+Importing is limited due to how the API registry associates specifications with definitions. Terraform will overwrite 
+the remote definition on the next run, replacing the UUID.
+
+## Managing Documentation
+API specifications on ReadMe automatically create a documentation page, but it isn't managed by Terraform. Use the 
+readme_doc resource with use_slug to manage the documentation page.
+
+See the ReadMe API documentation at https://docs.readme.com/main/reference/uploadapispecification for more information.
+`
+
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ resource.Resource                = &apiSpecificationResource{}
-	_ resource.ResourceWithConfigure   = &apiSpecificationResource{}
-	_ resource.ResourceWithImportState = &apiSpecificationResource{}
+	_ resource.Resource                = &apiSpecResource{}
+	_ resource.ResourceWithConfigure   = &apiSpecResource{}
+	_ resource.ResourceWithImportState = &apiSpecResource{}
 )
 
-// apiSpecificationResource is the data source implementation.
-type apiSpecificationResource struct {
+// apiSpecResource is the resource implementation.
+type apiSpecResource struct {
 	client *readme.Client
 }
 
-// apiSpecificationResourceModel maps the struct from the ReadMe client library to Terraform attributes.
-type apiSpecificationResourceModel struct {
+// apiSpecResourceModel maps the struct from the ReadMe client library to Terraform attributes.
+type apiSpecResourceModel struct {
 	ID             types.String `tfsdk:"id"`
 	Category       types.Object `tfsdk:"category"`
 	DeleteCategory types.Bool   `tfsdk:"delete_category"`
@@ -49,49 +69,21 @@ type apiSpecificationResourceModel struct {
 
 // NewAPISpecificationResource is a helper function to simplify the provider implementation.
 func NewAPISpecificationResource() resource.Resource {
-	return &apiSpecificationResource{}
+	return &apiSpecResource{}
 }
 
 // Metadata returns the data source type name.
-func (r *apiSpecificationResource) Metadata(
-	_ context.Context,
-	req resource.MetadataRequest,
-	resp *resource.MetadataResponse,
-) {
+func (r *apiSpecResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_api_specification"
 }
 
 // Configure adds the provider configured client to the data source.
-func (r *apiSpecificationResource) Configure(
-	_ context.Context,
-	req resource.ConfigureRequest,
-	_ *resource.ConfigureResponse,
-) {
+func (r *apiSpecResource) Configure(_ context.Context, req resource.ConfigureRequest, _ *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
 
 	r.client = req.ProviderData.(*readme.Client)
-}
-
-// jsonMatch compares two JSON strings without regards to formatting and returns a bool.
-// This function is used for comparing API specifications.
-func jsonMatch(one, two string) (bool, error) {
-	var oneIntf, twoIntf interface{}
-	err := json.Unmarshal([]byte(one), &oneIntf)
-	if err != nil {
-		return false, fmt.Errorf("error unmarshalling first item: %w", err)
-	}
-	err = json.Unmarshal([]byte(two), &twoIntf)
-	if err != nil {
-		return false, fmt.Errorf("error unmarshalling second item: %w", err)
-	}
-
-	if reflect.DeepEqual(oneIntf, twoIntf) {
-		return true, nil
-	}
-
-	return false, nil
 }
 
 // specCategoryObject maps a readme.CategorySummary type to a generic ObjectValue and returns the ObjectValue for use
@@ -117,41 +109,12 @@ func specCategoryObject(spec readme.APISpecification) basetypes.ObjectValue {
 }
 
 // Schema defines the API Specification resource attributes.
-func (r *apiSpecificationResource) Schema(
-	_ context.Context,
-	_ resource.SchemaRequest,
-	resp *resource.SchemaResponse,
-) {
+func (r *apiSpecResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Manages an API specification on ReadMe.com\n\n" +
-			"The provider creates and updates API specifications by first uploading the definition to the " +
-			"API registry and then creating or updating the API specification using the UUID returned from the " +
-			"API registry. This is necessary for associating an API specification with its definition. Ensuring " +
-			"the definition is created in the API registry is necessary for retrieving the " +
-			"remote definition. This behavior is undocumented in the ReadMe API documentation but works the same way " +
-			"the official ReadMe `rdme` CLI tool works.\n\n" +
-			"## External Changes\n\n" +
-			"External changes made to an API specification managed by Terraform will not be detected due to the way " +
-			"the API registry works. When a specification definition is updated, the registry UUID changes and is " +
-			"only available from the response when the definition is published to the registry. When Terraform runs " +
-			"after an external update, there's no way of programatically retrieving the current state without the " +
-			"current UUID. Forcing a Terraform update (e.g. tainting or a manual change) will get things " +
-			"synchronized again.\n\n" +
-			"## Importing Existing Specifications\n\n" +
-			"Importing API specifications is limited due to the behavior of the API registry and associating a " +
-			"specification with its definition. When importing, Terraform will replace the remote definition on its " +
-			"next run, regardless if it differs from the local definition. This will associate a registry UUID " +
-			"with the specification.\n\n" +
-			"## Managing API Specification Docs\n\n" +
-			"API Specifications created in ReadMe can have a documentation page associated with them. This is " +
-			"automatically created by ReadMe when a specification is created. The documentation page is not " +
-			"implicitly managed by Terraform. To manage the documentation page, use the `readme_doc` resource " +
-			"with the `use_slug` attribute set to the API specification tag slug.\n\n" +
-			"See <https://docs.readme.com/main/reference/uploadapispecification> for more information about this API " +
-			"endpoint.",
+		Description: apiSpecResourceDesc,
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				Description: "The unique identifier of the API specification.",
+				Description: "Unique identifier of the API specification.",
 				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -169,52 +132,51 @@ func (r *apiSpecificationResource) Schema(
 				},
 			},
 			"definition": schema.StringAttribute{
-				Description: "The raw API specification definition JSON.",
+				Description: "Raw API specification definition in JSON format.",
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"delete_category": schema.BoolAttribute{
-				Description: "Delete the category associated with the API specification when the resource is deleted.",
+				Description: "Delete the associated category when the resource is deleted.",
 				Optional:    true,
 			},
 			"last_synced": schema.StringAttribute{
-				Description: "Timestamp of last synchronization.",
+				Description: "Timestamp of the last synchronization.",
 				Computed:    true,
 			},
 			"uuid": schema.StringAttribute{
-				Description: "The API registry UUID associated with the specification.",
+				Description: "UUID of the API registry associated with this specification.",
 				Computed:    true,
 			},
 			"source": schema.StringAttribute{
-				Description: "The creation source of the API specification.",
+				Description: "Creation source of the API specification.",
 				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"title": schema.StringAttribute{
-				Description: "The title of the API specification derived from the specification JSON.",
+				Description: "Title derived from the specification JSON.",
 				Computed:    true,
 			},
 			"type": schema.StringAttribute{
-				Description: "The type of the API specification.",
+				Description: "Type of the API specification.",
 				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"version": schema.StringAttribute{
-				Description: "The version ID the API specification is associated with.",
+				Description: "Version ID associated with the API specification.",
 				Computed:    true,
 			},
 			"semver": schema.StringAttribute{
-				Description: "The semver(-ish) of the API specification. This value may also be set in the " +
-					"definition JSON `info:version` key, but will be ignored if this attribute is set. Changing the " +
-					"version of a created resource will replace the API specification. Use unique resources to use " +
-					"the same specification across multiple versions.\n\n" +
-					"Learn more about document versioning at <https://docs.readme.com/main/docs/versions>.",
+				Description: "Semver (or similar) for the API specification. This value can be set in the `info:version` key " +
+					"of the definition JSON, but this parameter takes precedence. Changing the version will replace the API " +
+					"specification. Use unique resources for multiple versions. Learn more about document versioning " +
+					"[here](https://docs.readme.com/main/docs/versions).",
 				Computed: true,
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
@@ -226,56 +188,50 @@ func (r *apiSpecificationResource) Schema(
 }
 
 // Create creates the API Specification and sets the initial Terraform state.
-func (r *apiSpecificationResource) Create(
-	ctx context.Context,
-	req resource.CreateRequest,
-	resp *resource.CreateResponse,
-) {
-	// Retrieve values from plan.
-	var plan apiSpecificationResourceModel
-	diags := req.Plan.Get(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
+func (r *apiSpecResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	// Retrieve values from the plan.
+	var plan apiSpecResourceModel
+	if diags := req.Plan.Get(ctx, &plan); diags.HasError() {
+		resp.Diagnostics.Append(diags...)
+
 		return
 	}
 
-	// Create the specification.
-	plan, err := r.save(ctx, saveActionCreate, "", plan)
+	// Create the API specification.
+	createdPlan, err := r.save(saveParams{
+		ctx:    ctx,
+		action: saveActionCreate,
+		specID: "",
+		plan:   plan,
+	})
 	if err != nil {
-		resp.Diagnostics.AddError("Unable to create API specification.", err.Error())
+		resp.Diagnostics.AddError(
+			"Unable to create API specification",
+			err.Error(),
+		)
 
 		return
 	}
 
-	// Set state to fully populated data.
-	diags = resp.State.Set(ctx, plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
+	// Set the Terraform state with the created plan.
+	if diags := resp.State.Set(ctx, createdPlan); diags.HasError() {
+		resp.Diagnostics.Append(diags...)
 	}
 }
 
 // Read refreshes the Terraform state with the latest data.
-func (r *apiSpecificationResource) Read(
-	ctx context.Context,
-	req resource.ReadRequest,
-	resp *resource.ReadResponse,
-) {
+func (r *apiSpecResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	// Get current state.
-	var plan, state apiSpecificationResourceModel
+	var state apiSpecResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// Track the current state definition.
-	currentDefinition := state.Definition
-
 	// Determine the version ID of the specification from the state or in the plan.
 	version := ""
-	if plan.Version.ValueString() != "" {
-		version = IDPrefix + plan.Version.ValueString()
+	if v := state.Version.ValueString(); v != "" {
+		version = IDPrefix + v
 	}
 
 	// Get the spec definition from the API registry if a registry UUID is available in the registry.
@@ -289,26 +245,26 @@ func (r *apiSpecificationResource) Read(
 
 				return
 			}
-
 			resp.Diagnostics.AddError(
-				fmt.Sprintf("Unable to read API specification: %+v", apiResponse.APIErrorResponse.Error),
+				"Unable to read API specification",
 				clientError(err, apiResponse),
 			)
 
 			return
 		}
-
 		remoteDefinition = types.StringValue(def)
 	}
 
-	// Get the spec plan.
-	state, err := r.makePlan(
-		ctx,
-		state.ID.ValueString(),
-		currentDefinition,
-		state.UUID.ValueString(),
-		version,
-	)
+	delCatetory := state.DeleteCategory
+
+	// Generate the spec plan.
+	state, err := r.makePlan(makePlanParams{
+		ctx:          ctx,
+		specID:       state.ID.ValueString(),
+		definition:   state.Definition,
+		registryUUID: state.UUID.ValueString(),
+		version:      version,
+	})
 	if err != nil {
 		if strings.Contains(err.Error(), "API specification not found") {
 			tflog.Warn(ctx, fmt.Sprintf("API specification %s not found. Removing from state.", state.ID.ValueString()))
@@ -316,40 +272,26 @@ func (r *apiSpecificationResource) Read(
 
 			return
 		}
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("Unable to read API specification: %+v", err),
-			err.Error())
+		resp.Diagnostics.AddError("Unable to read API specification", err.Error())
 
 		return
 	}
 
-	state.DeleteCategory = plan.DeleteCategory
+	state.DeleteCategory = delCatetory
 
-	// Compare the local state with the remote definition.
-	// The JSON keys/values are compared between the local and remote definition without regards to whitespace.
-	// Only update the state if they truly differ.
-	match, _ := jsonMatch(currentDefinition.ValueString(), remoteDefinition.ValueString())
-	if !match {
+	// Compare the local state with the remote definition and update if they differ.
+	if match, _ := jsonMatch(state.Definition.ValueString(), remoteDefinition.ValueString()); !match {
 		state.Definition = remoteDefinition
-	} else {
-		state.Definition = currentDefinition
 	}
 
 	// Set refreshed state.
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
 }
 
 // Update updates the API Specification and sets the updated Terraform state on success.
-func (r *apiSpecificationResource) Update(
-	ctx context.Context,
-	req resource.UpdateRequest,
-	resp *resource.UpdateResponse,
-) {
+func (r *apiSpecResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	// Retrieve values from plan and current state.
-	var plan, state apiSpecificationResourceModel
+	var plan, state apiSpecResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -357,7 +299,12 @@ func (r *apiSpecificationResource) Update(
 	}
 
 	// Create the specification.
-	plan, err := r.save(ctx, saveActionUpdate, state.ID.ValueString(), plan)
+	plan, err := r.save(saveParams{
+		ctx:    ctx,
+		action: saveActionUpdate,
+		specID: state.ID.ValueString(),
+		plan:   plan,
+	})
 	if err != nil {
 		resp.Diagnostics.AddError("Unable to update API specification.", err.Error())
 
@@ -372,22 +319,18 @@ func (r *apiSpecificationResource) Update(
 }
 
 // Delete deletes the API Specification and removes the Terraform state on success.
-func (r *apiSpecificationResource) Delete(
-	ctx context.Context,
-	req resource.DeleteRequest,
-	resp *resource.DeleteResponse,
-) {
+func (r *apiSpecResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	// Retrieve values from state.
-	var state apiSpecificationResourceModel
+	var state apiSpecResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	_, apiResponse, err := r.client.APISpecification.Delete(state.ID.ValueString())
-	if err != nil {
+	// Delete the API Specification.
+	if _, apiResponse, err := r.client.APISpecification.Delete(state.ID.ValueString()); err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to delete API specification.",
+			"Unable to delete API specification",
 			clientError(err, apiResponse),
 		)
 
@@ -395,38 +338,67 @@ func (r *apiSpecificationResource) Delete(
 	}
 
 	// Remove the category if delete_category is set to true.
-	// When deleting a specification, its category is not deleted by the API.
 	if state.DeleteCategory.ValueBool() {
-		category := state.Category.Attributes()
-		catSlug := category["slug"].String()
-		// Remove double quotes
-		catSlug = strings.ReplaceAll(catSlug, "\"", "")
+		r.deleteCategory(ctx, state, resp)
+	}
+}
 
-		// Categories are versioned. Get the version ID from the state.
-		versionID := state.Version.ValueString()
-		version := versionClean(ctx, r.client, versionID)
+// deleteCategory removes the associated category if it exists.
+func (r *apiSpecResource) deleteCategory(ctx context.Context, state apiSpecResourceModel, resp *resource.DeleteResponse) {
+	// Extract and clean the category slug.
+	catSlug := strings.ReplaceAll(state.Category.Attributes()["slug"].String(), "\"", "")
 
-		opts := readme.RequestOptions{Version: version}
-		_, apiResponse, err := r.client.Category.Delete(catSlug, opts)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Unable to delete category.",
-				clientError(err, apiResponse),
-			)
+	// Clean the version ID from the state.
+	versionID := state.Version.ValueString()
+	version := versionClean(ctx, r.client, versionID)
 
-			return
-		}
+	// Delete the category.
+	opts := readme.RequestOptions{Version: version}
+	if _, apiResponse, err := r.client.Category.Delete(catSlug, opts); err != nil {
+		resp.Diagnostics.AddError(
+			"Unable to delete category",
+			clientError(err, apiResponse),
+		)
+
+		return
 	}
 }
 
 // ImportState imports an API Specification by ID.
-func (r *apiSpecificationResource) ImportState(
-	ctx context.Context,
-	req resource.ImportStateRequest,
-	resp *resource.ImportStateResponse,
-) {
+func (r *apiSpecResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Use the "id" attribute for importing.
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+// jsonMatch compares two JSON strings without regards to formatting and returns a bool.
+// This function is used for comparing API specifications.
+// jsonMatch compares two JSON strings without regard to formatting and returns a bool.
+// This function is used for comparing API specifications.
+func jsonMatch(one, two string) (bool, error) {
+	if !json.Valid([]byte(one)) {
+		return false, fmt.Errorf("invalid JSON in first input: %s", one)
+	}
+	if !json.Valid([]byte(two)) {
+		return false, fmt.Errorf("invalid JSON in second input: %s", two)
+	}
+
+	var oneMap, twoMap map[string]interface{}
+	if err := json.Unmarshal([]byte(one), &oneMap); err != nil {
+		return false, fmt.Errorf("error unmarshalling first JSON: %w", err)
+	}
+	if err := json.Unmarshal([]byte(two), &twoMap); err != nil {
+		// nolint:errorlint
+		return false, fmt.Errorf("error unmarshalling second JSON: %w", err)
+	}
+
+	return reflect.DeepEqual(oneMap, twoMap), nil
+}
+
+type saveParams struct {
+	ctx    context.Context
+	action saveAction
+	specID string
+	plan   apiSpecResourceModel
 }
 
 // save is a helper function that performs the specified action and returns the responses.
@@ -436,69 +408,66 @@ func (r *apiSpecificationResource) ImportState(
 //
 // After creation or update, the specification is retrieved and `makePlan()` is called to map the results to the
 // Terraform resource schema that is returned.
-func (r *apiSpecificationResource) save(
-	ctx context.Context,
-	action saveAction,
-	specID string, plan apiSpecificationResourceModel,
-) (apiSpecificationResourceModel, error) {
-	var registry readme.APIRegistrySaved
+func (r *apiSpecResource) save(params saveParams) (apiSpecResourceModel, error) {
+	// Determine the version, preferring semver if specified.
+	version := params.plan.Semver.ValueString()
+
+	// Upload the API specification to the registry.
+	registry, err := r.createRegistry(params.plan.Definition.ValueString(), version)
+	if err != nil {
+		return apiSpecResourceModel{}, fmt.Errorf("unable to create registry: %w", err)
+	}
+
+	// Prepare request options and perform the save action (create or update).
+	requestOptions := readme.RequestOptions{Version: version}
 	var response readme.APISpecificationSaved
 	var apiResponse *readme.APIResponse
 
-	// If a semver is specified, use that.
-	version := ""
-	if plan.Semver.ValueString() != "" {
-		version = plan.Semver.ValueString()
-	}
-
-	// Upload the API specification to the API registry.
-	registry, err := r.createRegistry(plan.Definition.ValueString(), version)
-	if err != nil {
-		return apiSpecificationResourceModel{}, err
-	}
-
-	// Create or update an API specification associated with the API registry.
-	requestOptions := readme.RequestOptions{Version: version}
-	if action == saveActionUpdate {
-		response, apiResponse, err = r.client.APISpecification.Update(
-			specID,
-			UUIDPrefix+registry.RegistryUUID,
-		)
-	} else {
-		response, apiResponse, err = r.client.APISpecification.Create(
-			UUIDPrefix+registry.RegistryUUID,
-			requestOptions,
-		)
+	switch params.action {
+	case saveActionUpdate:
+		response, apiResponse, err = r.client.APISpecification.Update(params.specID, UUIDPrefix+registry.RegistryUUID)
+	case saveActionCreate:
+		response, apiResponse, err = r.client.APISpecification.Create(UUIDPrefix+registry.RegistryUUID, requestOptions)
+	default:
+		return apiSpecResourceModel{}, fmt.Errorf("unknown save action: %v", params.action)
 	}
 
 	if err != nil {
-		var status int
+		status := 0
 		if apiResponse != nil {
 			status = apiResponse.HTTPResponse.StatusCode
 		}
 
-		return apiSpecificationResourceModel{},
-			fmt.Errorf("unable to save: (%d) %w", status, err)
+		return apiSpecResourceModel{}, fmt.Errorf("unable to save specification: (%d) %w", status, err)
 	}
 
 	if response.ID == "" {
-		return apiSpecificationResourceModel{}, fmt.Errorf(
-			"specification response is empty after saving: %+v",
-			response,
-		)
+		return apiSpecResourceModel{}, fmt.Errorf("specification response is empty after saving: %+v", response)
 	}
 
-	deleteCategory := plan.DeleteCategory
-
-	// Get the spec plan.
-	plan, err = r.makePlan(ctx, response.ID, plan.Definition, registry.RegistryUUID, version)
+	// Preserve DeleteCategory value and update the plan.
+	delCategory := params.plan.DeleteCategory
+	plan, err := r.makePlan(makePlanParams{
+		ctx:          params.ctx,
+		specID:       response.ID,
+		definition:   params.plan.Definition,
+		registryUUID: registry.RegistryUUID,
+		version:      version,
+	})
 	if err != nil {
-		return apiSpecificationResourceModel{}, fmt.Errorf("unable to make plan: %+w", err)
+		return apiSpecResourceModel{}, fmt.Errorf("unable to make plan: %w", err)
 	}
-
-	plan.DeleteCategory = deleteCategory
+	plan.DeleteCategory = delCategory
 
 	return plan, nil
+}
+
+type makePlanParams struct {
+	ctx          context.Context
+	specID       string
+	definition   types.String
+	registryUUID string
+	version      string
 }
 
 // makePlan is a helper function that responds with a computed Terraform resource schema.
@@ -506,68 +475,58 @@ func (r *apiSpecificationResource) save(
 // If a version ID is provided instead of a semver, a call to the version API is
 // made to determine the semver.
 // `get()` is called to retrieve the remote specification that is mapped to the schema that is returned.
-func (r *apiSpecificationResource) makePlan(
-	ctx context.Context,
-	specID string,
-	definition types.String,
-	registryUUID, version string,
-) (apiSpecificationResourceModel, error) {
-	if strings.HasPrefix(version, IDPrefix) {
-		versionInfo, _, err := r.client.Version.Get(version)
+func (r *apiSpecResource) makePlan(params makePlanParams) (apiSpecResourceModel, error) {
+	// Resolve the version if it's an ID.
+	if strings.HasPrefix(params.version, IDPrefix) {
+		versionInfo, _, err := r.client.Version.Get(params.version)
 		if err != nil {
-			return apiSpecificationResourceModel{}, fmt.Errorf("error resolving version: %w", err)
+			return apiSpecResourceModel{}, fmt.Errorf("error resolving version: %w", err)
 		}
-
-		version = versionInfo.VersionClean
+		params.version = versionInfo.VersionClean
 	}
 
-	// Retrieve metadata about the API specification.
-	spec, err := r.get(ctx, specID, version)
+	// Retrieve the specification metadata.
+	spec, err := r.get(params.ctx, params.specID, params.version)
 	if err != nil {
-		return apiSpecificationResourceModel{}, fmt.Errorf("error getting specification: %w", err)
+		return apiSpecResourceModel{}, fmt.Errorf("error getting specification: %w", err)
 	}
-	// Map the plan to the resource struct.
-	plan := apiSpecificationResourceModel{
+
+	// Map the retrieved data to the resource model.
+	return apiSpecResourceModel{
 		Category:   specCategoryObject(spec),
-		Definition: definition,
+		Definition: params.definition,
 		ID:         types.StringValue(spec.ID),
 		LastSynced: types.StringValue(spec.LastSynced),
-		Semver:     types.StringValue(version),
+		Semver:     types.StringValue(params.version),
 		Source:     types.StringValue(spec.Source),
 		Title:      types.StringValue(spec.Title),
 		Type:       types.StringValue(spec.Type),
-		UUID:       types.StringValue(registryUUID),
+		UUID:       types.StringValue(params.registryUUID),
 		Version:    types.StringValue(spec.Version),
-	}
-
-	return plan, nil
+	}, nil
 }
 
 // get is a helper function that retrieves a specification by ID and returns a readme.APISpecification struct.
-func (r *apiSpecificationResource) get(ctx context.Context, specID, version string) (readme.APISpecification, error) {
+func (r *apiSpecResource) get(ctx context.Context, specID, version string) (readme.APISpecification, error) {
 	requestOptions := readme.RequestOptions{Version: version}
 	specification, _, err := r.client.APISpecification.Get(specID, requestOptions)
 	if err != nil {
-		tflog.Error(ctx, fmt.Sprintf("Unable to get specification: %+v", err))
-
-		return specification, fmt.Errorf("unable to get specification id %s: %w", specID, err)
+		return readme.APISpecification{}, fmt.Errorf("unable to get specification ID %s: %w", specID, err)
 	}
 
 	if specification.ID == "" {
-		return specification, fmt.Errorf("specification response is empty for specification ID %s", specID)
+		return readme.APISpecification{}, fmt.Errorf("specification response is empty for specification ID %s", specID)
 	}
 
 	return specification, nil
 }
 
-// createRegistry is a helper function that creates an API registry definition in ReadMe. This is done before any create
-// or update of an API specification.
-func (r *apiSpecificationResource) createRegistry(
-	definition, version string,
-) (readme.APIRegistrySaved, error) {
+// createRegistry is a helper function that creates an API registry definition in ReadMe.
+// This is done before any create or update of an API specification.
+func (r *apiSpecResource) createRegistry(definition, version string) (readme.APIRegistrySaved, error) {
 	registry, apiResponse, err := r.client.APIRegistry.Create(definition, version)
 	if err != nil {
-		return readme.APIRegistrySaved{}, errors.New(clientError(err, apiResponse))
+		return readme.APIRegistrySaved{}, fmt.Errorf("unable to create API registry: %s", clientError(err, apiResponse))
 	}
 
 	return registry, nil
