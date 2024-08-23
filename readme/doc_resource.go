@@ -44,8 +44,8 @@ The slug cannot be altered using the API or the Terraform Provider, but can be e
 ReadMe web UI.
 
 This creates challenges when managing docs with Terraform. To address this, the provider supports 
-the **use_slug** attribute. When set, the provider will attempt to manage an existing 
-doc by its slug. This can also be set in front matter using the **slug** key.
+the ` + "`use_slug`" + ` attribute. When set, the provider will attempt to manage an existing
+doc by its slug. This can also be set in front matter using the ` + "`slug`" + ` key.
 
 If this attribute is set and the doc does not exist, an error will be returned. This is intended 
 to be set when inheriting management of an existing doc or when customizing the slug *after* 
@@ -53,29 +53,30 @@ the doc has been created.
 
 Note that doc slugs are shared between Guides and API Specification References.
 
-⚠️ **Experimental:** The 'use_slug' attribute is experimental and may result in unexpected behavior.
+⚠️ **Experimental:** The ` + "`use_slug`" + ` attribute is experimental and may result in unexpected
+behavior.
 
 ## Destroying Docs with Children
 
 Docs in ReadMe can have child docs. 
 Terraform can infer a doc's relationship when they are all managed by the provider and delete them
-in the proper order as normal when referenced appropriately or when using **depends_on**.
+in the proper order as normal when referenced appropriately or when using ` + "`depends_on`." + `
 
 However, when managing docs with children, the provider may not be able to infer the relationship
-between parent and child docs, particularly in edge cases such as using the **use_slug** attribute
-to manage an API reference's parent doc.
+between parent and child docs, particularly in edge cases such as using the ` + "`use_slug`" + `
+attribute to manage an API reference's parent doc.
 
 When destroying a doc, the provider will check for child docs and prevent deletion if they exist.
-This behavior can be controlled with the **config.destroy_child_docs** attribute. When set to true,
-the provider will destroy child docs prior to deleting the parent doc. Setting this as a provider
+This behavior can be controlled with the ` + "`config.destroy_child_docs`" + ` attribute. When set to
+true, the provider will destroy child docs prior to deleting the parent doc. Setting this as a provider
 configuration attribute allows for it to be toggled without requiring changes to the resource.
 
-When 'config.destroy_child_docs' is set to true, the provider will log a warning when child docs are
-deleted before the parent doc.
+When ` + "`config.destroy_child_docs`" + ` is set to ` + "`true`" + `, the provider will log a
+warning when child docs are deleted before the parent doc.
 
 For best results, manage docs with Terraform and set their relationship by referencing the resource
-address of the parent doc in the child doc's **parent_doc_slug** or **depends_on** attributes. This
-ensures they are deleted in the correct order.
+address of the parent doc in the child doc's ` + "`parent_doc_slug`" + ` or ` + "`depends_on`" + `
+attributes. This ensures they are deleted in the correct order.
 `
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -1180,18 +1181,18 @@ func (r *docResource) Schema(
 				Computed:    true,
 			},
 			"use_slug": schema.StringAttribute{
-				Description: "**Use with caution!** Create the doc resource by importing an existing doc by its slug. " +
+				MarkdownDescription: "**Use with caution!** Create the doc resource by importing an existing doc by its slug. " +
 					"This is non-conventional and should only be used when the slug is known and " +
 					"the doc is not managed by Terraform or when the slug is changed in the web UI. " +
 					"This is useful for managing an API specification's doc that gets created " +
 					"automatically by ReadMe. When set, the specified doc will be replaced " +
-					"with the Terraform-managed doc.\n\n" +
+					"with the Terraform-managed doc. " +
 					"If this is set and then unset, a new doc will be created but the existing doc will not be " +
 					"deleted. The existing doc will be orphaned and will not be managed by Terraform. " +
 					"If this is unset and then set, the existing doc will be deleted and the resource will be " +
 					"pointed to the specified doc. " +
 					"In the case of API specification docs, the doc is implicitly deleted when the " +
-					"API specification is deleted.\n\n" +
+					"API specification is deleted. " +
 					"This attribute may be set in the body front matter with the `slug` key.",
 				Optional: true,
 				Computed: true,
