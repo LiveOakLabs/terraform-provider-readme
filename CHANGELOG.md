@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.5.4 - 2024-08-23
+
+### Bug Fixes
+
+- specs: handle deletion when reading version @joshbeard (#156)
+
 ## v0.5.3 - 2024-08-23
 
 ### Bug Fixes
