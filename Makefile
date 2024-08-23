@@ -1,7 +1,6 @@
 # Run 'make help' for a list of targets.
 .DEFAULT_GOAL := help
 
-GO_MODULE := $(shell go list -m)
 PKG_PATH := readme
 
 .PHONY: help
@@ -41,7 +40,7 @@ lint: modverify vet gofumpt lines golangci-lint ## Run all linters
 .PHONY: test
 test: ## Run unit and race tests with 'go test'
 	go test -v -count=1 -parallel=4 -coverprofile=coverage.txt -covermode count ./$(PKG_PATH)/...
-	#go test -race -short ./$(PKG_PATH)/...
+	go test -race -short ./$(PKG_PATH)/...
 
 ## Coverage ##
 .PHONY: coverage
@@ -49,11 +48,20 @@ coverage: test ## Generate a code test coverage report using 'gocover-cobertura'
 	go run github.com/boumenot/gocover-cobertura < coverage.txt > coverage.xml
 	rm -f coverage.txt
 
+.PHONY: test-coverage
+test-coverage: test ## Open the HTML test coverage report
+	@go tool cover -html=coverage.txt
+
 ## Vulnerability checks ##
 .PHONY: check-vuln
 check-vuln: ## Check for vulnerabilities using 'govulncheck'
 	@echo "Checking for vulnerabilities..."
 	go run golang.org/x/vuln/cmd/govulncheck ./...
+
+.PHONY: clean
+clean: ## Clean test files
+	rm -f dist/*
+	rm -f coverage.txt coverage.xml coverage.html checkstyle-report.xml
 
 .PHONY: docs
 docs: ## Run 'go generate' to create documentation
@@ -62,8 +70,3 @@ docs: ## Run 'go generate' to create documentation
 .PHONY: install
 install: ## Run 'go install' to install package
 	go install .
-
-.PHONY: clean
-clean: ## Clean test files
-	rm -f dist/*
-	rm -f coverage.txt coverage.xml coverage.html checkstyle-report.xml

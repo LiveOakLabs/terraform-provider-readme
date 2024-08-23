@@ -7,7 +7,7 @@
 📖 Refer to <https://registry.terraform.io/providers/LiveOakLabs/readme/latest/docs>
 for the latest provider documentation.
 
-☁️ Also see our [Go Client for the ReadMe.com API](https://github.com/liveoaklabs/readme-api-go-client).
+☁️ Also see our [Go Client for the ReadMe.com API](https://github.com/liveoaklabs/readme-api-go-client)
 that this provider uses.
 
 _This provider is developed by [Live Oak Bank](https://liveoakbank.com) and is
@@ -15,21 +15,21 @@ not officially associated with ReadMe.com._
 
 ## Getting Started
 
-__Terraform >= 1.0+ is required.__
+__Terraform >= 1.0 is required.__
 
 ### Configure the Provider
 
 ```terraform
 provider "readme" {
   # Set the API token here or with the README_API_TOKEN env var.
-  # api_token = ""
+  api_token = "YOUR_API_TOKEN"
 }
 
 terraform {
   required_providers {
     readme = {
       source  = "liveoaklabs/readme"
-      version = "~> 0.1"
+      version = "0.5.0" # Check for the latest version on the Terraform Registry.
     }
   }
 }
@@ -51,9 +51,8 @@ Create an API specification:
 
 ```terraform
 resource "readme_api_specification" "example" {
-  # 'definition' accepts a string of an OpenAPI specification definition JSON.
   definition = file("petstore.json")
-  semver     = readme_version.example.version
+  semver     = readme_version.example.version_clean
 }
 ```
 
@@ -63,7 +62,7 @@ Create a category:
 resource "readme_category" "example" {
   title   = "My example category"
   type    = "guide"
-  version = readme_version.example.version
+  version = readme_version.example.version_clean
 }
 ```
 
@@ -89,7 +88,7 @@ resource "readme_doc" "example" {
   # body can be read from a file using Terraform's `file()` function.
   body = file("mydoc.md")
 
-  version = readme_version.example.version
+  version = readme_version.example.version_clean
 }
 ```
 
@@ -102,11 +101,30 @@ for a full list with examples.
 ## Disclaimer About Versioning and Development Status
 
 ⚠️ This project is currently under active development and is versioned using
-the `0.x.x` scheme. Breaking changes are likely and will result in an
-increment to the minor version (e.g., `0.2.0` to `0.3.0).` Users are strongly
-advised not to automatically update to new minor or major versions without
-thoroughly testing, as the API and functionality may change significantly
-between releases.
+the `0.x.x` scheme.
+
+Breaking changes will likely occur and will trigger a minor version increment
+(e.g., `0.2.0->0.3.0`).
+
+Users are encouraged to pin the provider to a specific patch version for
+maximum stability throughout the `0.x.x` series.
+
+For examplea:
+
+```hcl
+terraform {
+  required_providers {
+    readme = {
+      source  = "liveoaklabs/readme"
+      # Pinning to a specific patch version.
+      version = "0.5.0"
+
+      # Alternatively, allow for patch updates.
+      # version = "~> 0.5.0"
+    }
+  }
+}
+```
 
 A stable `1.x` release is planned for the future once the project meets
 certain criteria for feature completeness and stability.
