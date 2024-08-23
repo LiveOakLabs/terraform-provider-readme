@@ -269,7 +269,7 @@ func (r *apiSpecResource) Read(ctx context.Context, req resource.ReadRequest, re
 		version:      version,
 	})
 	if err != nil {
-		if strings.Contains(err.Error(), "API specification not found") {
+		if strings.Contains(err.Error(), "API specification not found") || strings.Contains(err.Error(), "no match for version ID") {
 			tflog.Warn(ctx, fmt.Sprintf("API specification %s not found. Removing from state.", state.ID.ValueString()))
 			resp.State.RemoveResource(ctx)
 
