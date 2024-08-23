@@ -10,7 +10,7 @@ for the latest provider documentation.
 ☁️ Also see our [Go Client for the ReadMe.com API](https://github.com/liveoaklabs/readme-api-go-client).
 that this provider uses.
 
-_This library is developed by [Live Oak Bank](https://liveoakbank.com) and is
+_This provider is developed by [Live Oak Bank](https://liveoakbank.com) and is
 not officially associated with ReadMe.com._
 
 ## Getting Started
