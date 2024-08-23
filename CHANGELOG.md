@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.5.0 - 2024-08-23
+
+### Features
+
+- fix: deleting nested docs @joshbeard (#153)
+  - A new `config` parameter is added to the provider's configuration that contains a single `destroy_child_docs` attribute now that can toggle the behavior of the provider when deleting a doc with children. Previously, the provider would simply fail. With this change, a user can enable the provider to delete nested docs as they're encountered or fail with more helpful output. This fix was to address certain edge cases with managing docs for an API reference that had implicit child docs.
+  - Deleting a doc that doesn't exist (slug not found) will now remove the resource from state and emit a warning. Previously, the provider would throw an error and the only recourse was to manually remove the resource from state.
+  - Update the behavior of `use_slug` - previously, the provider would mark the resource for re-creation if `use_slug` as modified. This wasn't necessary and could lead to unintended side-effects. The provider will now remove the resource from state if the doc is not found remotely and emit a warning.
+  
+
+### Changes
+
+- API Specifications: refactors for clarity; doc improvements @joshbeard (#152)
+- Update readme-api-client: pagination @joshbeard (#151)
+- build(deps): bump github.com/hashicorp/terraform-plugin-framework from 1.10.0 to 1.11.0 @dependabot (#149)
+
 ## v0.4.0 - 2024-08-02
 
 ### Features
