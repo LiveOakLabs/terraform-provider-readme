@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.5.2 - 2024-08-23
+
+### Changes
+
+- docs: minor touchups @joshbeard (#154)
+
 ## v0.5.0 - 2024-08-23
 
 ### Features
