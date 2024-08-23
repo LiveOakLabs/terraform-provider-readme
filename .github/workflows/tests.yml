@@ -87,6 +87,9 @@ jobs:
           - '1.4.*'
           - '1.5.*'
           - '1.6.*'
+          - '1.7.*'
+          - '1.8.*'
+          - '1.9.*'
     steps:
       - uses: actions/checkout@v4 # v3.3.0
       - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
