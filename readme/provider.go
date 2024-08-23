@@ -46,6 +46,16 @@ type readmeProvider struct {
 type readmeProviderModel struct {
 	APIToken types.String `tfsdk:"api_token"`
 	APIURL   types.String `tfsdk:"api_url"`
+	Config   types.Object `tfsdk:"config"`
+}
+
+type providerData struct {
+	client *readme.Client
+	config providerConfig
+}
+
+type providerConfig struct {
+	DestroyChildDocs types.Bool `tfsdk:"destroy_child_docs"`
 }
 
 // saveAction is a custom type to represent the action to take when saving a
@@ -90,6 +100,16 @@ func (p *readmeProvider) Schema(
 					"environment variable or left unset to use the default.",
 				MarkdownDescription: "URL for accessing the ReadMe API. May also be set with the `README_API_URL` " +
 					"environment variable or left unset to use the default.",
+				Optional: true,
+			},
+			"config": schema.SingleNestedAttribute{
+				Description: "Provider configuration options.",
+				Attributes: map[string]schema.Attribute{
+					"destroy_child_docs": schema.BoolAttribute{
+						Description: "Destroy child docs when destroying a parent doc.",
+						Optional:    true,
+					},
+				},
 				Optional: true,
 			},
 		},
@@ -179,9 +199,27 @@ func (p *readmeProvider) Configure(
 		return
 	}
 
+	// Set the client in the provider data
+	attrs := config.Config.Attributes()
+	var destroyChildDocs types.Bool
+	if val, ok := attrs["destroy_child_docs"]; ok && val != nil {
+		destroyChildDocs = val.(types.Bool)
+	} else {
+		destroyChildDocs = types.BoolValue(false)
+	}
+
+	features := providerConfig{
+		DestroyChildDocs: destroyChildDocs,
+	}
+
+	cfg := &providerData{
+		client: client,
+		config: features,
+	}
+
 	// Make the Readme client available during DataSource and Resource type Configure methods.
 	resp.DataSourceData = client
-	resp.ResourceData = client
+	resp.ResourceData = cfg
 
 	tflog.Info(ctx, "Configured ReadMe client", map[string]any{"success": true})
 }

@@ -50,6 +50,7 @@ var (
 // apiSpecResource is the resource implementation.
 type apiSpecResource struct {
 	client *readme.Client
+	config providerConfig
 }
 
 // apiSpecResourceModel maps the struct from the ReadMe client library to Terraform attributes.
@@ -83,7 +84,9 @@ func (r *apiSpecResource) Configure(_ context.Context, req resource.ConfigureReq
 		return
 	}
 
-	r.client = req.ProviderData.(*readme.Client)
+	cfg := req.ProviderData.(*providerData)
+	r.client = cfg.client
+	r.config = cfg.config
 }
 
 // specCategoryObject maps a readme.CategorySummary type to a generic ObjectValue and returns the ObjectValue for use
@@ -344,7 +347,11 @@ func (r *apiSpecResource) Delete(ctx context.Context, req resource.DeleteRequest
 }
 
 // deleteCategory removes the associated category if it exists.
-func (r *apiSpecResource) deleteCategory(ctx context.Context, state apiSpecResourceModel, resp *resource.DeleteResponse) {
+func (r *apiSpecResource) deleteCategory(
+	ctx context.Context,
+	state apiSpecResourceModel,
+	resp *resource.DeleteResponse,
+) {
 	// Extract and clean the category slug.
 	catSlug := strings.ReplaceAll(state.Category.Attributes()["slug"].String(), "\"", "")
 
@@ -365,7 +372,11 @@ func (r *apiSpecResource) deleteCategory(ctx context.Context, state apiSpecResou
 }
 
 // ImportState imports an API Specification by ID.
-func (r *apiSpecResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *apiSpecResource) ImportState(
+	ctx context.Context,
+	req resource.ImportStateRequest,
+	resp *resource.ImportStateResponse,
+) {
 	// Use the "id" attribute for importing.
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

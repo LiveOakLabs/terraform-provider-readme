@@ -26,7 +26,7 @@ func TestCustomPageDataSource(t *testing.T) {
 						Reply(200).
 						JSON(mockCustomPages[0])
 				},
-				Config: providerConfig + `
+				Config: testProviderConfig + `
 					data "readme_custom_page" "test" {
 						slug = "` + mockCustomPages[0].Slug + `"
 					}`,

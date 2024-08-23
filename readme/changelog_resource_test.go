@@ -39,7 +39,7 @@ func TestChangelogResource(t *testing.T) {
 						Reply(201).
 						JSON(mockChangelogs[0])
 				},
-				Config: providerConfig + `
+				Config: testProviderConfig + `
 					resource "readme_changelog" "test" {
 						title = "` + mockChangelogs[0].Title + `"
 						type  = "` + mockChangelogs[0].Type + `"
@@ -112,7 +112,7 @@ func TestChangelogResource(t *testing.T) {
 						Times(1).
 						Reply(204)
 				},
-				Config: providerConfig + `
+				Config: testProviderConfig + `
 					resource "readme_changelog" "test" {
 						title = "` + mockUpdatedChangelog.Title + `"
 						type  = "` + mockUpdatedChangelog.Type + `"
@@ -160,7 +160,7 @@ func TestChangelogResource(t *testing.T) {
 						Times(1).
 						Reply(204)
 				},
-				Config: providerConfig + `
+				Config: testProviderConfig + `
 					resource "readme_changelog" "test" {
 						body  = "` + escapeNewlines(mockUpdatedChangelog.Body) + `"
 						type  = "` + mockUpdatedChangelog.Type + `"
@@ -196,7 +196,7 @@ func TestChangelogResource(t *testing.T) {
 			// Test updating with no title results in error.
 			{
 				ExpectError: regexp.MustCompile("Title is not set"),
-				Config: providerConfig + `
+				Config: testProviderConfig + `
 					resource "readme_changelog" "test" {
 						body  = "no title is set with front matter or attribute"
 				}`,
@@ -244,7 +244,7 @@ func TestChangelogResourceFrontMatter(t *testing.T) {
 						Times(1).
 						Reply(204)
 				},
-				Config: providerConfig + `
+				Config: testProviderConfig + `
 					resource "readme_changelog" "test" {
 						body  = "` + escapeNewlines(mockChangelog.Body) + `"
 					}`,
@@ -288,7 +288,7 @@ func TestChangelogResource_ReCreate(t *testing.T) {
 						Reply(201).
 						JSON(mockChangelogs[0])
 				},
-				Config: providerConfig + `
+				Config: testProviderConfig + `
 					resource "readme_changelog" "test" {
 						title = "` + mockChangelogs[0].Title + `"
 						type  = "` + mockChangelogs[0].Type + `"
@@ -329,7 +329,7 @@ func TestChangelogResource_ReCreate(t *testing.T) {
 						Times(1).
 						Reply(204)
 				},
-				Config: providerConfig + `
+				Config: testProviderConfig + `
 					resource "readme_changelog" "test" {
 						title = "` + mockChangelogs[0].Title + `"
 						type  = "` + mockChangelogs[0].Type + `"

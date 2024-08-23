@@ -62,7 +62,7 @@ func TestVersionDataSource(t *testing.T) {
 						Reply(200).
 						JSON(mockVersion)
 				},
-				Config: providerConfig + `data "readme_version" "test" {
+				Config: testProviderConfig + `data "readme_version" "test" {
 					version_clean = "` + mockVersion.VersionClean + `"
 				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -147,7 +147,7 @@ func TestVersionDataSource_GetByID(t *testing.T) {
 						Reply(200).
 						JSON(mockVersionList)
 				},
-				Config: providerConfig + `data "readme_version" "test" { id = "` + mockVersion.ID + `" }`,
+				Config: testProviderConfig + `data "readme_version" "test" { id = "` + mockVersion.ID + `" }`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(
 						"data.readme_version.test",
@@ -213,7 +213,7 @@ func TestVersionDataSource_AttributeError(t *testing.T) {
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      providerConfig + `data "readme_version" "test" { }`,
+				Config:      testProviderConfig + `data "readme_version" "test" { }`,
 				ExpectError: expectError,
 			},
 		},
@@ -233,7 +233,7 @@ func TestVersionDataSource_GetError(t *testing.T) {
 				PreConfig: func() {
 					gock.New(testURL).Get("/version").Times(1).Reply(401).JSON(map[string]string{})
 				},
-				Config:      providerConfig + `data "readme_version" "test" { version_clean = "1.1.1" }`,
+				Config:      testProviderConfig + `data "readme_version" "test" { version_clean = "1.1.1" }`,
 				ExpectError: expectError,
 			},
 		},

@@ -29,7 +29,7 @@ func TestCustomPagesDataSource(t *testing.T) {
 						AddHeader("x-total-count", "1").
 						JSON(mockCustomPages)
 				},
-				Config: providerConfig + `data "readme_custom_pages" "test" {}`,
+				Config: testProviderConfig + `data "readme_custom_pages" "test" {}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(
 						"data.readme_custom_pages.test",

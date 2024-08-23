@@ -24,7 +24,7 @@ func TestAPIRegistryDataSource(t *testing.T) {
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: providerConfig + tfConfig,
+				Config: testProviderConfig + tfConfig,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(
 						"data.readme_api_registry.test",
@@ -60,7 +60,7 @@ func TestAPIRegistryDataSource_GetError(t *testing.T) {
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: providerConfig + `data "readme_api_registry" "test" { uuid = "somethingUnique" }`,
+				Config: testProviderConfig + `data "readme_api_registry" "test" { uuid = "somethingUnique" }`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(
 						"data.readme_api_registry.test",

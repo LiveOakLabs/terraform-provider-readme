@@ -38,3 +38,11 @@ terraform {
 
 - `api_token` (String, Sensitive) Client token for accessing the ReadMe API. May alternatively be set with the `README_API_TOKEN` environment variable.
 - `api_url` (String) URL for accessing the ReadMe API. May also be set with the `README_API_URL` environment variable or left unset to use the default.
+- `config` (Attributes) Provider configuration options. (see [below for nested schema](#nestedatt--config))
+
+<a id="nestedatt--config"></a>
+### Nested Schema for `config`
+
+Optional:
+
+- `destroy_child_docs` (Boolean) Destroy child docs when destroying a parent doc.

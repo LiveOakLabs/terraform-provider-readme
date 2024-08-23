@@ -24,7 +24,7 @@ func TestVersionsDataSource(t *testing.T) {
 						Reply(200).
 						JSON(mockVersionList)
 				},
-				Config: providerConfig + `data "readme_versions" "test" {}`,
+				Config: testProviderConfig + `data "readme_versions" "test" {}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(
 						"data.readme_versions.test",
@@ -90,7 +90,7 @@ func TestVersionsDataSource_GetError(t *testing.T) {
 				PreConfig: func() {
 					gock.New(testURL).Get("/version").Times(1).Reply(401).JSON(map[string]string{})
 				},
-				Config:      providerConfig + `data "readme_versions" "test" {}`,
+				Config:      testProviderConfig + `data "readme_versions" "test" {}`,
 				ExpectError: expectError,
 			},
 		},

@@ -36,7 +36,7 @@ func TestCustomPageResource(t *testing.T) {
 						Reply(201).
 						JSON(mockCustomPages[0])
 				},
-				Config: providerConfig + `
+				Config: testProviderConfig + `
 					resource "readme_custom_page" "test" {
 						title = "` + mockCustomPages[0].Title + `"
 						body  = "` + mockCustomPages[0].Body + `"
@@ -113,7 +113,7 @@ func TestCustomPageResource(t *testing.T) {
 						Times(1).
 						Reply(204)
 				},
-				Config: providerConfig + `
+				Config: testProviderConfig + `
 					resource "readme_custom_page" "test" {
 						title = "` + mockUpdatedCustomPage.Title + `"
 						body  = "` + mockUpdatedCustomPage.Body + `"
@@ -134,7 +134,7 @@ func TestCustomPageResource(t *testing.T) {
 			// Test updating with no title results in error.
 			{
 				ExpectError: regexp.MustCompile("'title' must be set using the attribute or in the body front matter."),
-				Config: providerConfig + `
+				Config: testProviderConfig + `
 					resource "readme_custom_page" "test" {
 						body  = "no title is set with front matter or attribute"
 				}`,
@@ -164,7 +164,7 @@ func TestCustomPageResource(t *testing.T) {
 						Times(1).
 						Reply(204)
 				},
-				Config: providerConfig + `
+				Config: testProviderConfig + `
 					resource "readme_custom_page" "test" {
 						body  = "---\ntitle: ` + mockUpdatedCustomPage.Title + `\n---\n` + mockUpdatedCustomPage.Body + `"
 					}`,
@@ -227,7 +227,7 @@ func TestCustomPageResource_HTML(t *testing.T) {
 						Times(1).
 						Reply(204)
 				},
-				Config: providerConfig + `
+				Config: testProviderConfig + `
 					resource "readme_custom_page" "test" {
 						title     = "` + mockCustomPages[1].Title + `"
 						html      = "<html><body>` + mockCustomPages[1].HTML + `</body></html>"
