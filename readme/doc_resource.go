@@ -30,25 +30,25 @@ See <https://docs.readme.com/main/reference/getdoc> for more information about t
 
 ## Front Matter
 
-Docs on ReadMe support setting some attributes using front matter. 
+Docs on ReadMe support setting some attributes using front matter.
 Resource attributes take precedence over front matter attributes in the provider.
 
-Refer to <https://docs.readme.com/main/docs/rdme> for more information about using front matter 
+Refer to <https://docs.readme.com/main/docs/rdme> for more information about using front matter
 in ReadMe docs and custom pages.
 
 ## Doc Slugs
 
-Docs in ReadMe are uniquely identified by their slugs. The slug is a URL-friendly string that 
-is generated upon doc creation. By default, this is a normalized version of the doc title. 
-The slug cannot be altered using the API or the Terraform Provider, but can be edited in the 
+Docs in ReadMe are uniquely identified by their slugs. The slug is a URL-friendly string that
+is generated upon doc creation. By default, this is a normalized version of the doc title.
+The slug cannot be altered using the API or the Terraform Provider, but can be edited in the
 ReadMe web UI.
 
-This creates challenges when managing docs with Terraform. To address this, the provider supports 
+This creates challenges when managing docs with Terraform. To address this, the provider supports
 the ` + "`use_slug`" + ` attribute. When set, the provider will attempt to manage an existing
 doc by its slug. This can also be set in front matter using the ` + "`slug`" + ` key.
 
-If this attribute is set and the doc does not exist, an error will be returned. This is intended 
-to be set when inheriting management of an existing doc or when customizing the slug *after* 
+If this attribute is set and the doc does not exist, an error will be returned. This is intended
+to be set when inheriting management of an existing doc or when customizing the slug *after*
 the doc has been created.
 
 Note that doc slugs are shared between Guides and API Specification References.
@@ -58,7 +58,7 @@ behavior.
 
 ## Destroying Docs with Children
 
-Docs in ReadMe can have child docs. 
+Docs in ReadMe can have child docs.
 Terraform can infer a doc's relationship when they are all managed by the provider and delete them
 in the proper order as normal when referenced appropriately or when using ` + "`depends_on`." + `
 
@@ -466,7 +466,7 @@ func (r *docResource) Read(
 				}
 				hint := "Hint: If you changed the doc slug using the web UI, set the `use_slug` " +
 					"attribute or the `slug` frontmatter key to the new slug.\n"
-				resp.Diagnostics.AddError("Unable to search for doc.", hint+clientError(err, apiResponse))
+				resp.Diagnostics.AddWarning("Unable to search for doc.", hint+clientError(err, apiResponse))
 
 				return
 			}
@@ -593,8 +593,7 @@ func (r *docResource) Delete(
 	// Check the category's docs to find the doc and its children.
 	docs, _, err := r.client.Category.GetDocs(state.CategorySlug.ValueString(), requestOpts)
 	if err != nil {
-		resp.Diagnostics.AddError("Unable to retrieve category docs.", clientError(err, nil))
-		return
+		resp.Diagnostics.AddWarning("Unable to retrieve category docs.", clientError(err, nil))
 	}
 
 	// Gather the slugs of the docs to delete, including the parent and its children.
@@ -640,7 +639,7 @@ func (r *docResource) identifyDocsToDelete(
 	}
 
 	if parentDoc == nil {
-		resp.Diagnostics.AddError(
+		resp.Diagnostics.AddWarning(
 			"Doc not found",
 			fmt.Sprintf("The doc with slug '%s' was not found in the retrieved category docs.", slug),
 		)

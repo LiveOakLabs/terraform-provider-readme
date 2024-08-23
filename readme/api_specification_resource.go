@@ -20,21 +20,21 @@ import (
 )
 
 const apiSpecResourceDesc = `
-Manages API specifications on ReadMe.com by uploading the definition to the API registry and associating it with the 
-specification using the returned UUID. This association is necessary for managing the API specification and its 
+Manages API specifications on ReadMe.com by uploading the definition to the API registry and associating it with the
+specification using the returned UUID. This association is necessary for managing the API specification and its
 definition. The behavior is similar to the official rdme CLI but is undocumented in the ReadMe API.
 
 ## External Changes
-External changes to API specifications managed by Terraform are not automatically detected. The UUID changes when a 
-definition is updated, and the new UUID is only available when published to the registry. To synchronize, force an 
+External changes to API specifications managed by Terraform are not automatically detected. The UUID changes when a
+definition is updated, and the new UUID is only available when published to the registry. To synchronize, force an
 update via Terraform (e.g., taint or manual change).
 
 ## Importing Existing Specifications
-Importing is limited due to how the API registry associates specifications with definitions. Terraform will overwrite 
+Importing is limited due to how the API registry associates specifications with definitions. Terraform will overwrite
 the remote definition on the next run, replacing the UUID.
 
 ## Managing Documentation
-API specifications on ReadMe automatically create a documentation page, but it isn't managed by Terraform. Use the 
+API specifications on ReadMe automatically create a documentation page, but it isn't managed by Terraform. Use the
 readme_doc resource with use_slug to manage the documentation page.
 
 See the ReadMe API documentation at https://docs.readme.com/main/reference/uploadapispecification for more information.
