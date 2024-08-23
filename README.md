@@ -2,23 +2,20 @@
 
 [![Version](https://img.shields.io/github/v/release/liveoaklabs/terraform-provider-readme)](https://github.com/liveoaklabs/terraform-provider-readme/releases)
 
-Terraform provider for [ReadMe.com](https://readme.com)
+<img align="right" width="200" src=".github/readme/lob-logo.png">
 
-It uses the [ReadMe API Go client](https://github.com/liveoaklabs/readme-api-go-client) and the
-[Terraform Plugin Framework](https://developer.hashicorp.com/terraform/plugin/framework).
+📖 Refer to <https://registry.terraform.io/providers/LiveOakLabs/readme/latest/docs>
+for the latest provider documentation.
 
-![Live Oak Bank](.github/readme/lob-logo.png)
+☁️ Also see our [Go Client for the ReadMe.com API](https://github.com/liveoaklabs/terraform-provider-readme)
+that this provider uses.
 
-This provider is developed by [Live Oak Bank](https://liveoakbank.com) and is not affiliated with ReadMe.com.
-
-## Usage
-
-__Terraform 1.0+ is required.__
-
-Refer to the [provider docs on the Terraform registry](https://registry.terraform.io/providers/LiveOakLabs/readme/latest/docs) for information
-about using the provider.
+_This library is developed by [Live Oak Bank](https://liveoakbank.com) and is
+not officially associated with ReadMe.com._
 
 ## Getting Started
+
+__Terraform >= 1.0+ is required.__
 
 ### Configure the Provider
 
@@ -40,12 +37,23 @@ terraform {
 
 ### Manage Resources
 
+Create a version:
+
+```terraform
+resource "readme_version" "example" {
+  version   = "1.1.0"
+  from      = "1.0.0"
+  is_hidden = false
+}
+```
+
 Create an API specification:
 
 ```terraform
 resource "readme_api_specification" "example" {
   # 'definition' accepts a string of an OpenAPI specification definition JSON.
   definition = file("petstore.json")
+  semver     = readme_version.example.version
 }
 ```
 
@@ -53,8 +61,9 @@ Create a category:
 
 ```terraform
 resource "readme_category" "example" {
-  title = "My example category"
-  type  = "guide"
+  title   = "My example category"
+  type    = "guide"
+  version = readme_version.example.version
 }
 ```
 
@@ -79,16 +88,8 @@ resource "readme_doc" "example" {
 
   # body can be read from a file using Terraform's `file()` function.
   body = file("mydoc.md")
-}
-```
 
-Create a version:
-
-```terraform
-resource "readme_version" "example" {
-  version   = "1.1.0"
-  from      = "1.0.0"
-  is_hidden = true
+  version = readme_version.example.version
 }
 ```
 
@@ -98,13 +99,17 @@ The provider includes several data sources. Refer to the
 [provider docs on the Terraform registry](https://registry.terraform.io/providers/LiveOakLabs/readme/latest/docs/data-sources/api_registry)
 for a full list with examples.
 
+## Disclaimer About Versioning and Development Status
 
-## Versioning and Releases
+⚠️ This project is currently under active development and is versioned using
+the `0.x.x` scheme. Breaking changes are likely and will result in an
+increment to the minor version (e.g., `0.2.0` to `0.3.0).` Users are strongly
+advised not to automatically update to new minor or major versions without
+thoroughly testing, as the API and functionality may change significantly
+between releases.
 
-This project uses semantic versioning and is currently in _development_ status using a `0.x.x` versioning scheme.
-
-Breaking changes are likely to occur within the `0.x` _minor_ versions. Once the project reaches `1.0.0`, typical rules
-for semantic versioning will apply.
+A stable `1.x` release is planned for the future once the project meets
+certain criteria for feature completeness and stability.
 
 Refer to the [CHANGELOG](CHANGELOG.md) for release details.
 
