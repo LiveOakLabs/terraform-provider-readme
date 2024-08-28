@@ -109,7 +109,7 @@ Breaking changes will likely occur and will trigger a minor version increment
 Users are encouraged to pin the provider to a specific patch version for
 maximum stability throughout the `0.x.x` series.
 
-For examplea:
+For example:
 
 ```hcl
 terraform {
